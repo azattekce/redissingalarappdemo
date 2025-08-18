@@ -32,6 +32,10 @@ flowchart LR
     Identity -. Cookies .- UI
 ```
 
+Statik görsel (GitHub gibi ortamlarda garanti render için):
+
+![Topoloji Diyagramı](docs/topology.svg)
+
 ## Use Case Diyagramı (Özet)
 
 > Mermaid yerel “use case” diyagramı sağlamadığından, başlıca aktörleri ve aksiyonları akış diyagramı ile özetliyoruz.
@@ -326,3 +330,7 @@ Dockerfile, `certs/*.crt` dosyalarını güvenilir sertifika deposuna ekler ve `
 
 ---
 Bu dosya, uygulamanın mimarisini, akışlarını ve uç noktalarını hızlıca kavramak isteyenler için kapsamlı bir referans olarak hazırlanmıştır.
+
+## Geliştirici
+
+- Azat Tekçe

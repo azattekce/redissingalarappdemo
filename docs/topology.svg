@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
+  <defs>
+    <style>
+      .title{font: 700 22px sans-serif; fill:#222}
+      .label{font: 600 14px sans-serif; fill:#222}
+      .small{font: 12px sans-serif; fill:#333}
+      .box{fill:#ffffff;stroke:#6c757d;stroke-width:2;rx:8;ry:8}
+      .group{fill:#f8f9fa;stroke:#adb5bd;stroke-width:2;rx:12;ry:12}
+      .arrow{stroke:#495057;stroke-width:2;marker-end:url(#arrowHead)}
+    </style>
+    <marker id="arrowHead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#495057"/>
+    </marker>
+  </defs>
+
+  <rect x="10" y="10" width="960" height="500" fill="#fff" stroke="#dee2e6"/>
+  <text x="30" y="40" class="title">RedisChatApp — Topoloji</text>
+
+  <!-- Client Group -->
+  <rect x="40" y="70" width="260" height="380" class="group"/>
+  <text x="55" y="95" class="label">Client (Browser)</text>
+  <rect x="60" y="115" width="220" height="70" class="box"/>
+  <text x="70" y="140" class="label">UI — Bootstrap + JS</text>
+  <text x="70" y="160" class="small">wwwroot/index.html</text>
+  <rect x="60" y="205" width="220" height="70" class="box"/>
+  <text x="70" y="230" class="label">SignalR JS Client</text>
+  <text x="70" y="250" class="small">/chat</text>
+
+  <!-- App Group -->
+  <rect x="340" y="70" width="330" height="380" class="group"/>
+  <text x="355" y="95" class="label">ASP.NET Core App</text>
+  <rect x="360" y="115" width="290" height="60" class="box"/>
+  <text x="370" y="145" class="label">Minimal API — /api/*</text>
+  <rect x="360" y="190" width="290" height="60" class="box"/>
+  <text x="370" y="220" class="label">SignalR Hub — /chat</text>
+  <rect x="360" y="265" width="290" height="60" class="box"/>
+  <text x="370" y="295" class="label">Redis Subscriber (Hosted Service)</text>
+  <rect x="360" y="340" width="290" height="50" class="box"/>
+  <text x="370" y="370" class="small">Identity (Cookie) • EF Core (SQLite)</text>
+
+  <!-- Data/Infra Group -->
+  <rect x="700" y="70" width="240" height="380" class="group"/>
+  <text x="715" y="95" class="label">Infra</text>
+  <rect x="720" y="120" width="200" height="80" class="box"/>
+  <text x="730" y="150" class="label">Redis (Pub/Sub)</text>
+  <text x="730" y="170" class="small">chat:* kanalları</text>
+  <rect x="720" y="230" width="200" height="80" class="box"/>
+  <text x="730" y="260" class="label">SQLite (EF Core)</text>
+  <text x="730" y="280" class="small">chat.db</text>
+
+  <!-- Arrows -->
+  <!-- Client UI -> API -->
+  <line x1="280" y1="150" x2="340" y2="150" class="arrow"/>
+  <text x="290" y="140" class="small">HTTP</text>
+
+  <!-- Client SignalR -> Hub -->
+  <line x1="280" y1="240" x2="340" y2="220" class="arrow"/>
+  <text x="290" y="230" class="small">WebSocket/SignalR</text>
+
+  <!-- Hub -> Redis (publish) -->
+  <line x1="650" y1="220" x2="720" y2="160" class="arrow"/>
+  <text x="660" y="200" class="small">Publish chat:{id}</text>
+
+  <!-- Subscriber <- Redis (subscribe) -->
+  <line x1="720" y1="160" x2="650" y2="295" class="arrow"/>
+  <text x="660" y="280" class="small">Subscribe chat:*</text>
+
+  <!-- API <-> SQLite -->
+  <line x1="650" y1="365" x2="720" y2="270" class="arrow"/>
+  <line x1="720" y1="270" x2="650" y2="365" class="arrow"/>
+  <text x="655" y="350" class="small">CRUD</text>
+
+  <!-- Subscriber -> Hub (IHubContext) -->
+  <line x1="505" y1="295" x2="505" y2="250" class="arrow"/>
+  <text x="515" y="275" class="small">IHubContext</text>
+
+  <!-- Identity cookie -->
+  <line x1="170" y1="190" x2="390" y2="360" class="arrow"/>
+  <text x="185" y="200" class="small">Cookie</text>
+</svg>
