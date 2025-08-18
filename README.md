@@ -38,30 +38,30 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    actorUser([Kullanıcı])
+    actorUser["Kullanıcı"]
 
     subgraph Kimlik & Profil
-      UC1[[Kayıt Ol]]
-      UC2[[Giriş Yap]]
-      UC3[[Çıkış Yap]]
-      UC4[[Profil Görüntüle/Düzenle]]
-      UC5[[Şifre Değiştir]]
+      UC1["Kayıt Ol"]
+      UC2["Giriş Yap"]
+      UC3["Çıkış Yap"]
+      UC4["Profil Görüntüle/Düzenle"]
+      UC5["Şifre Değiştir"]
     end
 
     subgraph Sosyal
-      UC6[[Kullanıcıları Listele]]
-      UC7[[Arkadaşlık İsteği Gönder]]
-      UC8[[İstekleri Görüntüle/Kabul-Reddet]]
-      UC9[[Arkadaşları Listele/Çıkar]]
-      UC10[[Kullanıcıyı Engelle/Engeli Kaldır]]
-      UC11[[Kullanıcı Profilini Görüntüle]]
+      UC6["Kullanıcıları Listele"]
+      UC7["Arkadaşlık İsteği Gönder"]
+      UC8["İstekleri Görüntüle/Kabul-Reddet"]
+      UC9["Arkadaşları Listele/Çıkar"]
+      UC10["Kullanıcıyı Engelle/Engeli Kaldır"]
+      UC11["Kullanıcı Profilini Görüntüle"]
     end
 
     subgraph Mesajlaşma
-      UC12[[Özel Mesaj Gönder]]
-      UC13[[Gelen Mesajı Al (Gerçek Zamanlı)]]
-      UC14[[Mesaj Geçmişini Görüntüle]]
-      UC15[[Mesajı Sil (Yumuşak Silme)]]
+      UC12["Özel Mesaj Gönder"]
+      UC13["Gelen Mesajı Al - Gerçek Zamanlı"]
+      UC14["Mesaj Geçmişini Görüntüle"]
+      UC15["Mesajı Sil - Yumuşak Silme"]
     end
 
     actorUser --> UC1 & UC2 & UC3 & UC4 & UC5
