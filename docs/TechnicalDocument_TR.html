@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>RedisChatApp — Teknik Doküman (TR)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Segoe UI, Roboto, Arial, sans-serif; line-height: 1.5; color: #222; }
+    h1, h2, h3 { color: #1f2937; }
+    h1 { font-size: 28px; margin-top: 0; }
+    h2 { font-size: 22px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    h3 { font-size: 18px; }
+    .muted { color: #6b7280; }
+    .container { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+    .toc a { text-decoration: none; color: #2563eb; }
+    ul { margin: 0 0 16px 24px; }
+    code, pre { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; }
+    .kv dt { font-weight: 600; }
+    .kv dd { margin: 0 0 8px 0; }
+    .caption { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    img { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" style="margin-bottom:16px;">
+      <h1>RedisChatApp — Teknik Doküman</h1>
+      <div class="muted">Sürüm: 1.0 • Tarih: 18 Ağustos 2025</div>
+      <div class="muted">Kapsam: ASP.NET Core + SignalR + Redis (Pub/Sub) + EF Core (SQLite) gerçek zamanlı özel sohbet uygulaması</div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h2>İçindekiler</h2>
+      <div class="toc">
+        <ol>
+          <li><a href="#giris">Giriş</a></li>
+          <li><a href="#mimari">Mimari Genel Bakış</a></li>
+          <li><a href="#teknolojiler">Kullanılan Teknolojiler ve Seçim Gerekçeleri</a></li>
+          <li><a href="#bilesenler">Sistem Bileşenleri</a></li>
+          <li><a href="#veri-modeli">Veri Modeli</a></li>
+          <li><a href="#api-hub">API ve Hub Sözleşmeleri</a></li>
+          <li><a href="#is-kurallari">İş Kuralları ve Akışlar</a></li>
+          <li><a href="#guvenlik">Güvenlik</a></li>
+          <li><a href="#devops">DevOps ve Dağıtım</a></li>
+          <li><a href="#yapilandirma">Yapılandırma</a></li>
+          <li><a href="#kisitlar">Kısıtlar ve Varsayımlar</a></li>
+          <li><a href="#test">Test ve Gözlemlenebilirlik</a></li>
+          <li><a href="#performans">Performans ve Kapasite</a></li>
+          <li><a href="#riskler">Riskler ve Azaltımlar</a></li>
+          <li><a href="#yol-haritasi">Yol Haritası</a></li>
+          <li><a href="#ekler">Ekler</a></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" id="giris" style="margin-bottom:16px;">
+      <h2>1. Giriş</h2>
+      <h3>Amaç</h3>
+      <p>Bu doküman, RedisChatApp projesinin teknik detaylarını; mimari, kullanılan teknolojiler, veri modeli, API/HUB sözleşmeleri, güvenlik, dağıtım ve operasyonel konuları içerecek şekilde açıklamak için hazırlanmıştır.</p>
+      <h3>Kapsam</h3>
+      <p>Uygulama; kullanıcı kimlik doğrulaması, arkadaşlık yönetimi (istek/yanıt/engelleme), gerçek zamanlı özel mesajlaşma ve mesaj geçmişi sunar. Tek sayfalık bir web istemcisi ile (Bootstrap + JS) çalışır.</p>
+      <h3>Hedefler</h3>
+      <ul>
+        <li>Düşük gecikmeli gerçek zamanlı iletişim</li>
+        <li>Basit kurulum: Docker ve tek dosya SQLite</li>
+        <li>Kolay konfigürasyon: Ortam değişkenleri/JSON</li>
+      </ul>
+    </div>
+
+    <div class="card" id="mimari" style="margin-bottom:16px;">
+      <h2>2. Mimari Genel Bakış</h2>
+      <p>Uygulama, <strong>ASP.NET Core</strong> üzerinde <strong>Minimal API</strong> ve <strong>SignalR Hub</strong> kullanır. Mesajlar, <strong>Redis Pub/Sub</strong> ile yayınlanır; abonelik yapan bir arka plan hizmeti (<em>IHostedService</em>) bu mesajları SignalR üzerinden hedef kullanıcıya iletir. Kalıcı veri katmanı <strong>EF Core (SQLite)</strong> ile sağlanır. Kimlik doğrulama <strong>ASP.NET Core Identity</strong> (cookie) üzerindendir.</p>
+      <img src="topology.svg" alt="Topoloji Diyagramı">
+      <div class="caption">Şekil 1 — Sistem topolojisi ve veri akışları</div>
+      <h3>Bileşenler</h3>
+      <ul>
+        <li>Web İstemcisi: Bootstrap + Vanilla JS + SignalR JS client</li>
+        <li>Uygulama Sunucusu: Minimal API uçları + SignalR Hub + Redis Subscriber</li>
+        <li>Altyapı: Redis (Pub/Sub), SQLite (veritabanı)</li>
+      </ul>
+    </div>
+
+    <div class="card" id="teknolojiler" style="margin-bottom:16px;">
+      <h2>3. Kullanılan Teknolojiler ve Seçim Gerekçeleri</h2>
+      <dl class="kv">
+        <dt>ASP.NET Core 9.0 (Minimal API)</dt>
+        <dd>Modern, yüksek performanslı ve az törenli API geliştirme modeli. .NET ekosistemi ve barındırma seçenekleri geniş. Minimal API ile daha az kod, hızlı bootstrap.</dd>
+        <dt>SignalR</dt>
+        <dd>Gerçek zamanlı iletişim için WebSockets öncelikli; gerektiğinde Long Polling/Server-Sent Events yedekleri. Oturum ve yetkilendirme entegrasyonu güçlü.</dd>
+        <dt>Redis (StackExchange.Redis)</dt>
+        <dd>Pub/Sub ile çoklu uygulama örnekleri arasında (scale-out) mesaj dağıtımı. Düşük gecikme, yaygın yönetilebilirlik. Upstash gibi yönetilen servislerle kolay bulut dağıtımı.</dd>
+        <dt>EF Core (SQLite)</dt>
+        <dd>Geliştirme ve demo için dosya tabanlı, sıfır sunucu kurulumlu veritabanı. EF Core ile güçlü LINQ/izleme. Üretimde ihtiyaç olursa kolayca başka bir sağlayıcıya taşınabilir.</dd>
+        <dt>ASP.NET Core Identity (Cookie)</dt>
+        <dd>Kimlik yönetimi, oturum, şifreleme ve politika entegrasyonu. Cookie tabanlı oturum ile tarayıcı istemcisi için basit ve yaygın bir seçenek.</dd>
+        <dt>Bootstrap 5 + Vanilla JS</dt>
+        <dd>Hızlı prototipleme, duyarlı (responsive) arayüz, minimum bağımlılık. SignalR JS istemcisi ile doğrudan hub iletişimi.</dd>
+        <dt>Docker &amp; Docker Compose</dt>
+        <dd>Tek komutla geliştirme/çalıştırma; Redis hizmeti ile birlikte orkestrasyon. Taşınabilir ve reproducible ortamlar.</dd>
+      </dl>
+    </div>
+
+    <div class="card" id="bilesenler" style="margin-bottom:16px;">
+      <h2>4. Sistem Bileşenleri</h2>
+      <h3>4.1 Uygulama Sunucusu</h3>
+      <ul>
+        <li><strong>Program.cs</strong>: Minimal API uçları (Auth, Profil, Kullanıcılar, Arkadaşlar, Mesajlar) ve SignalR hub kaydı.</li>
+        <li><strong>Hubs/ChatHub.cs</strong>: <code>/chat</code> yolunda özel mesaj gönderimini sağlar (<code>SendPrivateMessage(toUserId, content)</code>).</li>
+        <li><strong>Services/*</strong>: Redis aboneliğini yöneten <em>Hosted Service</em> ve uygulama servisleri.</li>
+        <li><strong>Data/*, Models/*</strong>: EF Core varlıkları ve DB bağlamı.</li>
+      </ul>
+      <h3>4.2 Arka Plan Abonesi (Redis Subscriber)</h3>
+      <p><em>IHostedService</em> olarak çalışır; <code>chat:*</code> kalıbındaki kanallara abone olur. Gelen mesajları <em>IHubContext</em> kullanarak ilgili kullanıcıya iletir.</p>
+      <h3>4.3 Web İstemcisi</h3>
+      <p><strong>wwwroot/index.html</strong> tek sayfa; Bootstrap bileşenleri, SignalR JS istemcisi, modallar ve sohbet alanı içerir.</p>
+    </div>
+
+    <div class="card" id="veri-modeli" style="margin-bottom:16px;">
+      <h2>5. Veri Modeli</h2>
+      <ul>
+        <li><strong>ApplicationUser</strong>: Identity kullanıcı varlığı (Id, Email, UserName, DisplayName, PhoneNumber).</li>
+        <li><strong>UserProfile</strong>: AvatarUrl, Gender, Address, Education; gizlilik bayrakları <em>PhonePublic</em>, <em>AddressPublic</em>.</li>
+        <li><strong>FriendRequest</strong>: FromUserId, ToUserId, Status (Pending/Accepted/Rejected).</li>
+        <li><strong>FriendBlock</strong>: BlockerUserId, BlockedUserId.</li>
+        <li><strong>ChatMessage</strong>: FromUserId, ToUserId, Content, SentAt, yumuşak silme için <em>IsDeletedBySender</em>/<em>IsDeletedByRecipient</em>.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="api-hub" style="margin-bottom:16px;">
+      <h2>6. API ve Hub Sözleşmeleri</h2>
+      <h3>6.1 Kimlik</h3>
+      <ul>
+        <li>POST <code>/api/auth/register</code> — { email, password, displayName }</li>
+        <li>POST <code>/api/auth/login</code> — { email, password }</li>
+        <li>POST <code>/api/auth/logout</code></li>
+        <li>GET <code>/api/auth/me</code> — { id, email, displayName }</li>
+      </ul>
+      <h3>6.2 Kullanıcı ve Arkadaşlık</h3>
+      <ul>
+        <li>GET <code>/api/users</code>, GET <code>/api/users/{id}</code></li>
+        <li>GET <code>/api/friends</code></li>
+        <li>GET <code>/api/friends/requests</code> — { incoming, outgoing }</li>
+        <li>POST <code>/api/friends/request</code> — { toUserId }</li>
+        <li>POST <code>/api/friends/respond</code> — { requestId, accept }</li>
+        <li>POST <code>/api/friends/remove</code> — { userId }</li>
+        <li>GET <code>/api/friends/blocks</code></li>
+        <li>POST <code>/api/friends/block</code>, <code>/api/friends/unblock</code> — { userId }</li>
+      </ul>
+      <h3>6.3 Mesajlar ve Hub</h3>
+      <ul>
+        <li>GET <code>/api/messages/{otherId}</code> — Mesaj geçmişi (yumuşak silme filtreli)</li>
+        <li>POST <code>/api/messages/{id}/delete</code></li>
+        <li>SignalR Hub <code>/chat</code> — <em>SendPrivateMessage(toUserId, content)</em>; client callback <em>ReceivePrivateMessage(payload)</em></li>
+      </ul>
+    </div>
+
+    <div class="card" id="is-kurallari" style="margin-bottom:16px;">
+      <h2>7. İş Kuralları ve Akışlar</h2>
+      <ul>
+        <li><strong>Arkadaşlık</strong>: Kullanıcı, bir başkasına istek gönderir; alıcı kabul ederse arkadaş olurlar. Engellenen kullanıcıya istek veya mesaj gönderilemez.</li>
+        <li><strong>Mesajlaşma</strong>: Gönderilen mesaj DB'ye yazılır; <code>chat:{recipientId}</code> kanalında Redis'e yayınlanır. Abone servis, ilgili kullanıcıya SignalR ile iletir.</li>
+        <li><strong>Yumuşak silme</strong>: Bir taraf sildiğinde yalnızca kendi görünümünden kalkar; karşı taraf için kayıtta kalır.</li>
+        <li><strong>Profil gizliliği</strong>: Telefon/adres, kullanıcı tercihlerine göre görünür.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="guvenlik" style="margin-bottom:16px;">
+      <h2>8. Güvenlik</h2>
+      <ul>
+        <li>Kimlik doğrulama: ASP.NET Core Identity, cookie tabanlı oturum.</li>
+        <li>Yetkilendirme: API ve Hub üzerinde <em>[Authorize]</em>; mesaj gönderiminde engelleme ve arkadaşlık kontrolleri.</li>
+        <li>Girdi doğrulama: Uç noktalarda temel doğrulamalar; içerik uzunluğu, boş içerik vb.</li>
+        <li>İletişim güvenliği: Üretimde HTTPS terminasyonu önerilir (ters proxy/Kestrel).</li>
+        <li>Gizli anahtarlar: Ortam değişkenleri ve gizli yönetimi (örn. REDIS bağlantısı) ile sağlanır.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="devops" style="margin-bottom:16px;">
+      <h2>9. DevOps ve Dağıtım</h2>
+      <ul>
+        <li><strong>Dockerfile</strong>: Çok aşamalı build; <code>EXPOSE 8080</code>, <code>ASPNETCORE_URLS=http://0.0.0.0:8080</code>.</li>
+        <li><strong>docker-compose.yml</strong>: <em>web</em> ve (opsiyonel) <em>redis</em> servisleri; <code>web</code> 8080 portunda yayında.</li>
+        <li><strong>NU1301/CA</strong>: Özel CA sertifikalarını <code>certs/*.crt</code> ile güvene ekleyebilme, proxy arg desteği.</li>
+        <li><strong>Upstash</strong>: <code>REDIS_CONNECTION_STRING</code> ile harici Redis kullanımı; <em>local</em> profil ile dahili Redis.</li>
+        <li><strong>Veri</strong>: SQLite dosyası <code>/data/chat.db</code> volume üzerinden kalıcı.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="yapilandirma" style="margin-bottom:16px;">
+      <h2>10. Yapılandırma</h2>
+      <ul>
+        <li><code>appsettings.json</code>: Varsayılan bağlantılar; üretimde 5020 zorlaması yok (konteyner 8080'i dinler).</li>
+        <li><code>appsettings.Development.json</code>: Yerelde Kestrel 5020, detaylı loglama.</li>
+        <li>Ortam değişkenleri: <code>Redis__ConnectionString</code>, <code>ConnectionStrings__Default</code>, <code>ASPNETCORE_URLS</code>.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="kisitlar" style="margin-bottom:16px;">
+      <h2>11. Kısıtlar ve Varsayımlar</h2>
+      <ul>
+        <li>SQLite tek dosyalı DB, yüksek eşzamanlı yazımda sınırlı; demo/geliştirme için uygundur.</li>
+        <li>Çoklu kopya dağıtımında SignalR için Redis backplane zaten kullanılmaktadır; yapışkan oturumlara gerek yoktur.</li>
+        <li>Dosya yükleme, medya depolama gibi özellikler kapsam dışıdır.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="test" style="margin-bottom:16px;">
+      <h2>12. Test ve Gözlemlenebilirlik</h2>
+      <ul>
+        <li>Manuel akış testleri: Kayıt, giriş, arkadaşlık, engelleme, mesaj gönder/al, yumuşak silme.</li>
+        <li>Loglama: ASP.NET Core logging; production için yapılandırılabilir seviyeler.</li>
+        <li>Öneri: Birim testleri ve entegrasyon testleri eklenebilir (xUnit + WebApplicationFactory + Testcontainers Redis).</li>
+      </ul>
+    </div>
+
+    <div class="card" id="performans" style="margin-bottom:16px;">
+      <h2>13. Performans ve Kapasite</h2>
+      <ul>
+        <li>SignalR, binlerce eşzamanlı bağlantıyı yönetebilir; Redis pub/sub fan-out ile ölçeklenir.</li>
+        <li>Mesaj boyutları küçük tutulmalı; içerik boyutu ve hız sınırlamaları eklenebilir.</li>
+        <li>Veritabanı için arşivleme/paginate stratejileri önerilir.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="riskler" style="margin-bottom:16px;">
+      <h2>14. Riskler ve Azaltımlar</h2>
+      <ul>
+        <li><strong>Redis kesintisi</strong>: Geçici kuyruklama yok; mesaj anlık iletilemez. Azaltım: İş sırası (Queue) entegrasyonu, retry.
+        </li>
+        <li><strong>SQLite kilitlenmeleri</strong>: Yüksek yazımda gecikme. Azaltım: Üretimde PostgreSQL/SQL Server.</li>
+        <li><strong>Tarayıcı uyumluluğu</strong>: Eski tarayıcılarda SignalR fallbacks. Azaltım: Polyfill ve test matrisi.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="yol-haritasi" style="margin-bottom:16px;">
+      <h2>15. Yol Haritası</h2>
+      <ul>
+        <li>Mesaj sayfalama ve arama</li>
+        <li>Bildirimler (push/email)</li>
+        <li>Gelişmiş moderasyon ve raporlama</li>
+        <li>Test kapsamını artırma</li>
+      </ul>
+    </div>
+
+    <div class="card" id="ekler" style="margin-bottom:16px;">
+      <h2>16. Ekler</h2>
+      <ul>
+        <li>Kaynak: <code>README.md</code> (Mermaid diyagramlar, çalıştırma talimatları)</li>
+        <li>Topoloji görseli: <code>docs/topology.svg</code></li>
+        <li>Geliştirici: Azat Tekçe</li>
+      </ul>
+      <h3>DOCX Olarak Kaydetme</h3>
+      <ol>
+        <li>Bu dosyayı Windows'ta çift tıklayıp Microsoft Word ile açın (veya Word içinde Dosya > Aç).</li>
+        <li>Word içinde Dosya > Farklı Kaydet > Biçim: Word Belgesi (*.docx) seçin.</li>
+      </ol>
+    </div>
+
+  </div>
+</body>
+</html>
