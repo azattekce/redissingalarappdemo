@@ -243,6 +243,48 @@ dotnet run --project .\RedisChatApp.csproj
 
 - Varsayılan adres: http://localhost:5000 (veya Kestrel çıktısına göre). Tarayıcıda açıldığında `wwwroot/index.html` yüklenir.
 
+### Docker ve Docker Compose ile Çalıştırma
+
+Ön koşul: Docker Desktop yüklü olmalı.
+
+1) Görselleri build edip servisleri ayağa kaldırın
+
+```cmd
+docker compose up -d --build
+```
+
+2) Uygulama adresi
+
+- Web: http://localhost:8080
+- Redis: localhost:6379
+
+3) Ortam değişkenleri (compose dosyasında ayarlı)
+
+- ASPNETCORE_URLS = http://0.0.0.0:8080
+- Redis__ConnectionString = redis:6379,abortConnect=false
+- ConnectionStrings__Default = Data Source=/data/chat.db
+
+4) Durdurma ve loglar
+
+```cmd
+docker compose logs -f
+docker compose down
+```
+
+### NU1301 / UntrustedRoot (Docker build) Çözümü
+
+Kurumsal proxy veya özel kök sertifika (CA) varsa `dotnet restore` sırasında TLS hatası (NU1301) alabilirsiniz. Çözüm:
+
+1) Özel CA sertifikanızı `.crt` (PEM) formatında `certs/` klasörüne koyun (örnek: `certs/corporate-root-ca.crt`).
+
+2) Gerekliyse proxy bilgilerini build arg olarak geçin:
+
+```cmd
+docker compose build --build-arg HTTP_PROXY=http://proxy:8080 --build-arg HTTPS_PROXY=http://proxy:8080 --build-arg NO_PROXY=localhost,127.0.0.1
+```
+
+Dockerfile, `certs/*.crt` dosyalarını güvenilir sertifika deposuna ekler ve `HTTP_PROXY/HTTPS_PROXY/NO_PROXY` arglarını onurlandırır.
+
 ## Notlar ve İpuçları
 
 - Geliştirme sırasında exe kilitlenmesi: Çalışan uygulama açıkken yeniden derleme kopyalama hatası verebilir. Önce çalışan süreci durdurup sonra `dotnet build`/`run` çağırın.

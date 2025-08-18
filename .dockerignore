@@ -1,0 +1,19 @@
+# General
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/node_modules
+**/*.user
+**/*.suo
+**/*.cache
+
+# Build outputs
+**/out
+**/publish
+
+# OS
+**/.DS_Store
+**/Thumbs.db
