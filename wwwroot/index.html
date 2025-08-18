@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redis Chat -DEMO</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .vh-80 { height: 80vh; }
+    .scroll { overflow-y: auto; }
+  .avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  .avatar-lg { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="m-0">Redis Chat -DEMO</h1>
+      <div id="welcomeUser" class="text-muted"></div>
+    </div>
+
+    <!-- Auth (buttons + modals) -->
+    <div id="authSection" class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex gap-2 align-items-center">
+          <button id="btnShowRegister" class="btn btn-outline-primary">Kayıt ol</button>
+          <button id="btnShowLogin" class="btn btn-primary">Giriş yap</button>
+          <button id="btnLogout" class="btn btn-secondary ms-auto">Çıkış</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <!-- Kullanıcı & Arkadaşlar -->
+        <div class="card mb-3">
+          <div class="card-header">Ben</div>
+          <div class="card-body" id="meBox">Giriş yapılmadı</div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">Kullanıcılar</div>
+          <ul id="usersList" class="list-group list-group-flush scroll vh-80"></ul>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">Arkadaşlık İstekleri</div>
+          <div class="card-body">
+            <h6>Gelen</h6>
+            <ul id="incomingList" class="list-group mb-2"></ul>
+            <h6>Giden</h6>
+            <ul id="outgoingList" class="list-group"></ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Arkadaşlar</div>
+          <ul id="friendsList" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <!-- Sohbet -->
+        <div id="chatCard" class="card vh-80 d-flex">
+          <div class="card-header" id="chatHeader">Özel Sohbet</div>
+          <div class="card-body scroll" id="chatMessages"></div>
+          <div class="card-footer">
+            <div class="input-group">
+              <input id="chatInput" class="form-control" placeholder="Mesaj yazın" />
+              <button id="btnSend" class="btn btn-primary" type="button">Gönder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kayıt Ol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">E-posta</label>
+            <input id="regEmail" type="email" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Şifre</label>
+            <input id="regPassword" type="password" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Görünen Ad</label>
+            <input id="regDisplayName" type="text" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+          <button id="btnRegister" type="button" class="btn btn-primary">Kayıt ol</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Giriş Yap</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">E-posta</label>
+            <input id="loginEmail" type="email" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Şifre</label>
+            <input id="loginPassword" type="password" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+          <button id="btnLogin" type="button" class="btn btn-primary">Giriş yap</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Friend Profile Modal -->
+  <div class="modal fade" id="friendProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Profil</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img id="fpAvatar" class="avatar-lg" alt="avatar" />
+            <div>
+              <div class="mb-1"><strong>Ad:</strong> <span id="fpName"></span></div>
+              <div class="mb-1"><strong>Email:</strong> <span id="fpEmail"></span></div>
+              <div class="mb-1"><strong>Telefon:</strong> <span id="fpPhone"></span></div>
+            </div>
+          </div>
+          <div class="mb-2"><strong>Cinsiyet:</strong> <span id="fpGender"></span></div>
+          <div class="mb-2"><strong>Adres:</strong> <span id="fpAddress"></span></div>
+          <div class="mb-2"><strong>Eğitim:</strong> <span id="fpEducation"></span></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Profile Modal -->
+  <div class="modal fade" id="myProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title d-flex align-items-center gap-2">
+            <span class="d-inline-block" style="width:20px;height:20px;border-radius:50%;background:#e9ecef;display:inline-flex;align-items:center;justify-content:center;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M4 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            Profilim
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img id="mpAvatar" class="avatar-lg" alt="avatar" />
+            <div class="flex-grow-1">
+              <label class="form-label small mb-1">Görünen Ad</label>
+              <input id="mpDisplayName" class="form-control form-control-sm" placeholder="Görünen Ad" />
+              <div class="mt-2 small text-muted">Email: <span id="mpEmail"></span></div>
+            </div>
+          </div>
+          <label class="form-label small mb-1">Avatar URL</label>
+          <input id="mpAvatarUrl" class="form-control form-control-sm mb-2" placeholder="https://... veya data:image/..." />
+          <label class="form-label small mb-1">Telefon</label>
+          <input id="mpPhone" class="form-control form-control-sm mb-2" placeholder="Telefon" />
+          <label class="form-label small mb-1">Cinsiyet</label>
+          <select id="mpGender" class="form-select form-select-sm mb-2">
+            <option value="">Seçiniz</option>
+            <option>Erkek</option>
+            <option>Kadın</option>
+            <option>Diğer</option>
+          </select>
+          <label class="form-label small mb-1">Adres</label>
+          <input id="mpAddress" class="form-control form-control-sm mb-2" placeholder="Adres" />
+          <label class="form-label small mb-1">Eğitim</label>
+          <input id="mpEducation" class="form-control form-control-sm mb-2" placeholder="Eğitim" />
+          <div class="form-check form-check-sm">
+            <input id="mpPhonePublic" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="mpPhonePublic">Telefon herkese açık</label>
+          </div>
+          <div class="form-check form-check-sm">
+            <input id="mpAddressPublic" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="mpAddressPublic">Adres herkese açık</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnMyProfileSave" type="button" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let me = null;
+    let activeFriendId = null;
+    const chatMessages = document.getElementById('chatMessages');
+  const userCache = new Map();
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('/chat')
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on('ReceivePrivateMessage', async (payload) => {
+      // payload: fromUserId:message
+      const [from, ...rest] = payload.split(':');
+      const msg = rest.join(':');
+      const senderName = await getUserName(from);
+      if (activeFriendId !== from) {
+        await setActiveChat(from, senderName);
+        return;
+      }
+      chatMessages.appendChild(renderMessageBubble({ id: 0, content: msg, fromUserId: from }, false, senderName));
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    function renderMessageBubble(m, mine, nameOverride) {
+      const row = document.createElement('div');
+      row.className = `d-flex ${mine ? 'justify-content-end' : 'justify-content-start'} my-1`;
+      const bubble = document.createElement('div');
+      bubble.className = `border rounded px-2 py-1 ${mine ? 'bg-primary text-white' : 'bg-light'}`;
+      const senderName = nameOverride ?? (mine ? (me?.displayName || me?.email || 'Ben') : (userCache.get(m.fromUserId || m.FromUserId) || ''));
+      const content = m.content || m.Content || '';
+      bubble.textContent = `${senderName ? senderName + ': ' : ''}${content}`;
+      // delete button (only for mine or theirs shown to me)
+      const btn = document.createElement('button');
+      btn.className = `btn btn-sm ${mine ? 'btn-light' : 'btn-outline-secondary'} ms-2`;
+      btn.textContent = 'Sil';
+      btn.onclick = async () => { await api(`/api/messages/${m.id || m.Id}/delete`, { method: 'POST' }); await loadHistory(activeFriendId); };
+      const wrap = document.createElement('div');
+      wrap.className = 'd-flex align-items-center';
+      wrap.appendChild(bubble); wrap.appendChild(btn);
+      row.appendChild(wrap);
+      return row;
+    }
+
+  async function loadHistory(otherId) {
+      chatMessages.innerHTML = '';
+      const list = await api(`/api/messages/${otherId}`);
+      list.forEach(m => {
+    const mine = (m.fromUserId || m.FromUserId) === (me?.id);
+    const name = mine ? (me?.displayName || me?.email) : (userCache.get(otherId) || otherId);
+    chatMessages.appendChild(renderMessageBubble(m, mine, name));
+      });
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function startHub() {
+      try {
+        await connection.start();
+      } catch (err) {
+        console.error(err);
+        setTimeout(startHub, 2000);
+      }
+    }
+
+    async function setActiveChat(friendId, friendName) {
+      activeFriendId = friendId;
+      const name = friendName || (await getUserName(friendId));
+      document.getElementById('chatHeader').textContent = `Özel Sohbet: ${name}`;
+      localStorage.setItem('lastChatUserId', friendId);
+      await loadHistory(friendId);
+      document.getElementById('chatCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function restoreLastChat() {
+      const lastId = localStorage.getItem('lastChatUserId');
+      if (lastId) {
+        try {
+          const name = await getUserName(lastId);
+          await setActiveChat(lastId, name);
+        } catch {}
+      }
+    }
+
+    async function getUserName(userId) {
+      if (userCache.has(userId)) return userCache.get(userId);
+      try {
+        const u = await api(`/api/users/${userId}`);
+        const name = u.displayName || u.email || userId;
+        userCache.set(userId, name);
+        return name;
+      } catch {
+        return userId;
+      }
+    }
+
+    async function openFriendProfile(userId) {
+      const placeholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='48' cy='36' r='18' fill='%23ffffff'/><rect x='24' y='60' width='48' height='24' rx='12' fill='%23ffffff'/></svg>";
+      const u = await api(`/api/users/${userId}`);
+      document.getElementById('fpName').textContent = u.displayName || u.email || '';
+      document.getElementById('fpEmail').textContent = u.email || '';
+      document.getElementById('fpPhone').textContent = u.phoneNumber || 'Gizli';
+      document.getElementById('fpGender').textContent = u.profile?.gender || '';
+      document.getElementById('fpAddress').textContent = u.profile?.address || 'Gizli';
+      document.getElementById('fpEducation').textContent = u.profile?.education || '';
+      const img = document.getElementById('fpAvatar');
+      img.src = u.profile?.avatarUrl || placeholder;
+      img.onerror = () => { img.src = placeholder; };
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('friendProfileModal')).show();
+    }
+
+    async function openMyProfile() {
+      const placeholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='48' cy='36' r='18' fill='%23ffffff'/><rect x='24' y='60' width='48' height='24' rx='12' fill='%23ffffff'/></svg>";
+      try {
+        const p = await api('/api/profile');
+        document.getElementById('mpDisplayName').value = p.displayName || '';
+        document.getElementById('mpEmail').textContent = p.email || '';
+        document.getElementById('mpPhone').value = p.phoneNumber || '';
+        document.getElementById('mpAvatarUrl').value = p.profile?.avatarUrl || '';
+        document.getElementById('mpGender').value = p.profile?.gender || '';
+        document.getElementById('mpAddress').value = p.profile?.address || '';
+        document.getElementById('mpEducation').value = p.profile?.education || '';
+        document.getElementById('mpPhonePublic').checked = !!p.profile?.phonePublic;
+        document.getElementById('mpAddressPublic').checked = !!p.profile?.addressPublic;
+        const img = document.getElementById('mpAvatar');
+        img.src = p.profile?.avatarUrl || placeholder;
+        img.onerror = () => { img.src = placeholder; };
+        const modalEl = document.getElementById('myProfileModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+        // attach save handler (idempotent)
+        const saveBtn = document.getElementById('btnMyProfileSave');
+        saveBtn.onclick = async () => {
+          const displayName = document.getElementById('mpDisplayName').value;
+          const phoneNumber = document.getElementById('mpPhone').value;
+          const profile = {
+            avatarUrl: document.getElementById('mpAvatarUrl').value,
+            gender: document.getElementById('mpGender').value,
+            address: document.getElementById('mpAddress').value,
+            education: document.getElementById('mpEducation').value,
+            phonePublic: document.getElementById('mpPhonePublic').checked,
+            addressPublic: document.getElementById('mpAddressPublic').checked
+          };
+          await api('/api/profile', { method: 'POST', body: JSON.stringify({ displayName, phoneNumber, profile }) });
+          modal.hide();
+          await refreshMe();
+        };
+      } catch (e) { console.error(e); }
+    }
+
+    // API helpers
+    async function api(path, options) {
+      const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
+      if (!res.ok) throw new Error(await res.text());
+      if (res.headers.get('Content-Type')?.includes('application/json')) return res.json();
+      return null;
+    }
+
+  async function refreshMe() {
+      try {
+        me = await api('/api/auth/me');
+        // fetch profile to get avatar
+        const p = await api('/api/profile');
+        const avatar = p?.profile?.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
+        document.getElementById('meBox').textContent = `${me.displayName || me.email} (${me.id})`;
+        // UI: show welcome with avatar + action icons and hide big auth buttons
+        document.getElementById('welcomeUser').innerHTML = `
+          <div class="d-flex align-items-center gap-2">
+            <span>Hoş geldin, <strong>${me.displayName || me.email}</strong></span>
+            <div class="d-flex align-items-center gap-2 ms-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="openMyProfile()">Bilgilerim</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="performLogout()">Çıkış</button>
+            </div>
+          </div>`;
+    document.getElementById('btnShowRegister').style.display = 'none';
+    document.getElementById('btnShowLogin').style.display = 'none';
+    document.getElementById('btnLogout').style.display = 'none';
+  await Promise.all([refreshUsers(), refreshFriends(), refreshRequests()]);
+  await startHub();
+  await restoreLastChat();
+      } catch {
+        me = null;
+    document.getElementById('meBox').textContent = 'Giriş yapılmadı';
+    // UI: show login/register again and clear welcome
+    document.getElementById('welcomeUser').textContent = '';
+    document.getElementById('btnShowRegister').style.display = '';
+    document.getElementById('btnShowLogin').style.display = '';
+    document.getElementById('btnLogout').style.display = 'none';
+      }
+    }
+
+    async function refreshUsers() {
+      const [users, friends] = await Promise.all([
+        api('/api/users'),
+        api('/api/friends')
+      ]);
+      const friendSet = new Set((friends || []).map(f => f.id));
+      const ul = document.getElementById('usersList');
+      ul.innerHTML = '';
+      users.filter(u => u.id !== me.id).forEach(u => {
+        userCache.set(u.id, u.displayName || u.email);
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex align-items-center justify-content-between';
+        const left = document.createElement('div'); left.className = 'd-flex align-items-center gap-2';
+        const img = document.createElement('img'); img.className = 'avatar-small'; img.alt = 'avatar';
+        img.src = u.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
+        img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>"; };
+        const name = document.createElement('span'); name.textContent = `${u.displayName || u.email}`;
+        left.appendChild(img); left.appendChild(name);
+        if (friendSet.has(u.id)) {
+          const badge = document.createElement('span');
+          badge.className = 'badge text-bg-secondary';
+          badge.textContent = 'Arkadaşsınız';
+          li.appendChild(left); li.appendChild(badge);
+        } else {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-sm btn-outline-primary';
+          btn.textContent = 'Arkadaşlık isteği';
+          btn.onclick = async () => { await api('/api/friends/request', { method: 'POST', body: JSON.stringify({ toUserId: u.id }) }); await refreshRequests(); };
+          li.appendChild(left); li.appendChild(btn);
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    async function refreshFriends() {
+  const [friends, blocks] = await Promise.all([
+        api('/api/friends'),
+        api('/api/friends/blocks')
+      ]);
+      const ul = document.getElementById('friendsList');
+      ul.innerHTML = '';
+      friends.forEach(f => {
+        userCache.set(f.id, f.displayName || f.email);
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        const left = document.createElement('div'); left.className = 'd-flex align-items-center gap-2';
+        const img = document.createElement('img'); img.className = 'avatar-small'; img.alt = 'avatar';
+        img.src = f.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
+        img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>"; };
+        const name = document.createElement('span'); name.textContent = `${f.displayName || f.email}`;
+        left.appendChild(img); left.appendChild(name);
+        left.style.cursor = 'pointer';
+        left.onclick = () => openFriendProfile(f.id);
+        const wrap = document.createElement('div');
+  const chatBtn = document.createElement('button'); chatBtn.className = 'btn btn-sm btn-primary me-1'; chatBtn.textContent = 'Sohbet'; chatBtn.onclick = async () => { await setActiveChat(f.id, f.displayName || f.email); document.getElementById('chatInput').focus(); };
+  const profBtn = document.createElement('button'); profBtn.className = 'btn btn-sm btn-outline-secondary me-1'; profBtn.textContent = 'Profil'; profBtn.onclick = async () => { await openFriendProfile(f.id); };
+        const blocked = blocks.includes(f.id);
+        const blockBtn = document.createElement('button'); blockBtn.className = `btn btn-sm ${blocked ? 'btn-danger' : 'btn-outline-danger'} me-1`; blockBtn.textContent = blocked ? 'Engeli Kaldır' : 'Engelle'; blockBtn.onclick = async ()=>{
+          if (blocks.includes(f.id)) {
+            await api('/api/friends/unblock', { method:'POST', body: JSON.stringify({ userId: f.id }) });
+          } else {
+            await api('/api/friends/block', { method:'POST', body: JSON.stringify({ userId: f.id }) });
+          }
+          await refreshFriends();
+        };
+        const removeBtn = document.createElement('button'); removeBtn.className = 'btn btn-sm btn-outline-dark'; removeBtn.textContent = 'Sil'; removeBtn.onclick = async ()=>{ await api('/api/friends/remove', { method:'POST', body: JSON.stringify({ userId: f.id }) }); await refreshFriends(); };
+        wrap.appendChild(chatBtn); wrap.appendChild(profBtn); wrap.appendChild(blockBtn); wrap.appendChild(removeBtn);
+  li.appendChild(left);
+  li.appendChild(wrap);
+        ul.appendChild(li);
+      });
+    }
+
+    async function refreshRequests() {
+      const { incoming, outgoing } = await api('/api/friends/requests');
+      const inc = document.getElementById('incomingList');
+      const out = document.getElementById('outgoingList');
+      inc.innerHTML = ''; out.innerHTML = '';
+      incoming.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.textContent = `İstek #${r.id} -> size`;
+        const div = document.createElement('div');
+        const ac = document.createElement('button'); ac.className = 'btn btn-sm btn-success me-2'; ac.textContent = 'Kabul'; ac.onclick = async ()=>{ await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: true }) }); await Promise.all([refreshFriends(), refreshRequests()]); };
+        const dc = document.createElement('button'); dc.className = 'btn btn-sm btn-outline-danger'; dc.textContent = 'Reddet'; dc.onclick = async ()=>{ await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: false }) }); await refreshRequests(); };
+        div.appendChild(ac); div.appendChild(dc);
+        li.appendChild(div);
+        inc.appendChild(li);
+      });
+      outgoing.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = `İstek #${r.id} -> gönderildi (bekliyor)`;
+        out.appendChild(li);
+      });
+    }
+
+    // Modals show handlers
+    const regModalEl = document.getElementById('registerModal');
+    const loginModalEl = document.getElementById('loginModal');
+    document.getElementById('btnShowRegister').onclick = () => bootstrap.Modal.getOrCreateInstance(regModalEl).show();
+    document.getElementById('btnShowLogin').onclick = () => bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+
+    // Modal submit handlers
+    document.getElementById('btnRegister').onclick = async () => {
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const displayName = document.getElementById('regDisplayName').value;
+      await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, displayName }) });
+      alert('Kayıt başarılı, hoş geldiniz! Şimdi giriş yapın.');
+      bootstrap.Modal.getOrCreateInstance(regModalEl).hide();
+    };
+    document.getElementById('btnLogin').onclick = async () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      await refreshMe();
+      bootstrap.Modal.getOrCreateInstance(loginModalEl).hide();
+    };
+    async function performLogout() {
+      await api('/api/auth/logout', { method: 'POST' });
+      me = null; activeFriendId = null; chatMessages.innerHTML = '';
+      document.getElementById('meBox').textContent = 'Çıkış yapıldı. Tekrar kayıt/giriş yapabilirsiniz.';
+      document.getElementById('welcomeUser').textContent = '';
+      localStorage.removeItem('lastChatUserId');
+      // Show login/register again; hide logout
+      document.getElementById('btnShowRegister').style.display = '';
+      document.getElementById('btnShowLogin').style.display = '';
+      document.getElementById('btnLogout').style.display = 'none';
+    }
+    document.getElementById('btnLogout').onclick = performLogout;
+
+  // Profile actions moved to modal (openMyProfile)
+    document.getElementById('btnSend').onclick = async () => {
+      const input = document.getElementById('chatInput');
+      const message = input.value.trim();
+      if (!message || !activeFriendId) return;
+      try {
+        await connection.invoke('SendPrivateMessage', activeFriendId, message);
+  chatMessages.appendChild(renderMessageBubble({ id: 0, content: message, fromUserId: me.id }, true));
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+        input.value = '';
+      } catch (err) { console.error(err); }
+    };
+
+    refreshMe();
+  </script>
+</body>
+</html>
