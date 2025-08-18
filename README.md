@@ -271,6 +271,26 @@ docker compose logs -f
 docker compose down
 ```
 
+Upstash Redis ile çalıştırma (local Redis olmadan)
+
+1) `.env` oluşturun ve Upstash bilgisini ekleyin (örneğe bakın `.env.example`):
+
+```env
+REDIS_CONNECTION_STRING=open-adder-8344.upstash.io:6379,password=ASCYAAImcDFlYTEzNzRjMzQ5YWY0N2Q1YWRhZTA3NTBhNzY3NTg3NXAxODM0NA,ssl=True,abortConnect=false
+```
+
+2) Sadece web konteynerini çalıştırın (redis servisini atlayın):
+
+```cmd
+docker compose up -d --build web
+```
+
+Not: Local Redis ile çalıştırmak isterseniz profil kullanın:
+
+```cmd
+docker compose --profile local up -d --build
+```
+
 ### NU1301 / UntrustedRoot (Docker build) Çözümü
 
 Kurumsal proxy veya özel kök sertifika (CA) varsa `dotnet restore` sırasında TLS hatası (NU1301) alabilirsiniz. Çözüm:

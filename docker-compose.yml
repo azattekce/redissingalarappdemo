@@ -4,6 +4,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redischat-redis
+    profiles: ["local"]
     ports:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
@@ -15,11 +16,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: redischat-web
-    depends_on:
-      - redis
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - Redis__ConnectionString=redis:6379,abortConnect=false
+      # Use external Upstash by setting REDIS_CONNECTION_STRING env (StackExchange.Redis format)
+      # Example: open-adder-8344.upstash.io:6379,password=***,ssl=True,abortConnect=false
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379,abortConnect=false}
       - ConnectionStrings__Default=Data Source=/data/chat.db
     ports:
       - "8080:8080"

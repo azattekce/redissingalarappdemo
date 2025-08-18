@@ -15,16 +15,18 @@ RUN apt-get update \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Copy any custom CA certs if present
-COPY certs/*.crt /usr/local/share/ca-certificates/extra/
-RUN update-ca-certificates || true
-
-# Copy csproj and restore (better layer caching)
-COPY RedisChatApp.csproj ./
-RUN dotnet restore ./RedisChatApp.csproj
-
-# Copy the rest of the source
+# Copy full source (includes optional certs/)
 COPY . .
+
+# If custom CA certs exist in /src/certs, trust them before restore
+RUN if [ -d /src/certs ] && ls /src/certs/*.crt >/dev/null 2>&1; then \
+			cp /src/certs/*.crt /usr/local/share/ca-certificates/extra/ && update-ca-certificates; \
+		else \
+			echo "No custom CA certs found under /src/certs"; \
+		fi
+
+# Restore with updated trust store
+RUN dotnet restore ./RedisChatApp.csproj
 
 # Publish
 RUN dotnet publish ./RedisChatApp.csproj -c Release -o /app --no-restore
