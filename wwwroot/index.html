@@ -16,7 +16,7 @@
 <body class="bg-light">
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="m-0">Redis Chat -DEMO</h1>
+      <h1 class="m-0">Redis Chat-Demo</h1>
       <div id="welcomeUser" class="text-muted"></div>
     </div>
 
@@ -438,7 +438,19 @@
           const btn = document.createElement('button');
           btn.className = 'btn btn-sm btn-outline-primary';
           btn.textContent = 'Arkadaşlık isteği';
-          btn.onclick = async () => { await api('/api/friends/request', { method: 'POST', body: JSON.stringify({ toUserId: u.id }) }); await refreshRequests(); };
+          btn.onclick = async () => {
+            try {
+              await api('/api/friends/request', { method: 'POST', body: JSON.stringify({ toUserId: u.id }) });
+              btn.textContent = 'İstek gönderildi';
+              btn.disabled = true;
+              btn.classList.remove('btn-outline-primary');
+              btn.classList.add('btn-secondary');
+              await refreshRequests();
+            } catch (e) {
+              console.error(e);
+              alert('İstek gönderilirken bir hata oluştu.');
+            }
+          };
           li.appendChild(left); li.appendChild(btn);
         }
         ul.appendChild(li);
