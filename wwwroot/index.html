@@ -17,17 +17,11 @@
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="m-0">Redis Chat-Demo</h1>
-      <div id="welcomeUser" class="text-muted"></div>
-    </div>
-
-    <!-- Auth (buttons + modals) -->
-    <div id="authSection" class="card mb-4">
-      <div class="card-body">
-        <div class="d-flex gap-2 align-items-center">
-          <button id="btnShowRegister" class="btn btn-outline-primary">Kayıt ol</button>
-          <button id="btnShowLogin" class="btn btn-primary">Giriş yap</button>
-          <button id="btnLogout" class="btn btn-secondary ms-auto">Çıkış</button>
-        </div>
+      <div class="d-flex align-items-center gap-2">
+        <div id="welcomeUser" class="text-muted me-2"></div>
+        <button id="btnShowRegister" class="btn btn-sm btn-outline-primary">Kayıt Ol</button>
+        <button id="btnShowLogin" class="btn btn-sm btn-primary">Giriş Yap</button>
+        <button id="btnLogout" class="btn btn-sm btn-outline-danger" style="display:none;">Çıkış</button>
       </div>
     </div>
 
@@ -82,6 +76,11 @@
     </div>
   </footer>
 
+  <!-- Toasts (top-right) -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
   <!-- Register Modal -->
   <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -91,22 +90,27 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">E-posta</label>
-            <input id="regEmail" type="email" class="form-control" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Şifre</label>
-            <input id="regPassword" type="password" class="form-control" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Görünen Ad</label>
-            <input id="regDisplayName" type="text" class="form-control" />
-          </div>
+          <form id="registerForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">E-posta</label>
+              <input id="regEmail" type="email" class="form-control" required />
+              <div class="invalid-feedback">Lütfen geçerli bir e-posta girin.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Şifre</label>
+              <input id="regPassword" type="password" class="form-control" minlength="6" required />
+              <div class="invalid-feedback">Şifre en az 6 karakter olmalıdır.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Görünen Ad</label>
+              <input id="regDisplayName" type="text" class="form-control" minlength="2" required />
+              <div class="invalid-feedback">Görünen ad en az 2 karakter olmalıdır.</div>
+            </div>
+          </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-          <button id="btnRegister" type="button" class="btn btn-primary">Kayıt ol</button>
+          <button id="btnRegister" type="button" class="btn btn-primary">Kayıt Ol</button>
         </div>
       </div>
     </div>
@@ -121,18 +125,22 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">E-posta</label>
-            <input id="loginEmail" type="email" class="form-control" />
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Şifre</label>
-            <input id="loginPassword" type="password" class="form-control" />
-          </div>
+          <form id="loginForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">E-posta</label>
+              <input id="loginEmail" type="email" class="form-control" required />
+              <div class="invalid-feedback">Lütfen e-posta girin.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Şifre</label>
+              <input id="loginPassword" type="password" class="form-control" required />
+              <div class="invalid-feedback">Lütfen şifrenizi girin.</div>
+            </div>
+          </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-          <button id="btnLogin" type="button" class="btn btn-primary">Giriş yap</button>
+          <button id="btnLogin" type="button" class="btn btn-primary">Giriş Yap</button>
         </div>
       </div>
     </div>
@@ -370,6 +378,23 @@
       } catch (e) { console.error(e); }
     }
 
+    // Toast helper (Bootstrap 5)
+    function showToast(message, type = 'info', delay = 3000) {
+      const container = document.getElementById('toastContainer');
+      if (!container) { alert(message); return; }
+      const toastEl = document.createElement('div');
+      const color = type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'secondary';
+      toastEl.className = `toast align-items-center text-bg-${color} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+      toastEl.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+      container.appendChild(toastEl);
+      const t = new bootstrap.Toast(toastEl, { delay });
+      t.show();
+      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    }
+
     // API helpers
     async function api(path, options) {
       const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
@@ -389,25 +414,22 @@
         document.getElementById('welcomeUser').innerHTML = `
           <div class="d-flex align-items-center gap-2">
             <span>Hoş geldin, <strong>${me.displayName || me.email}</strong></span>
-            <div class="d-flex align-items-center gap-2 ms-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="openMyProfile()">Bilgilerim</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="performLogout()">Çıkış</button>
-            </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="openMyProfile()">Bilgilerim</button>
           </div>`;
-    document.getElementById('btnShowRegister').style.display = 'none';
-    document.getElementById('btnShowLogin').style.display = 'none';
-    document.getElementById('btnLogout').style.display = 'none';
+        document.getElementById('btnShowRegister').style.display = 'none';
+        document.getElementById('btnShowLogin').style.display = 'none';
+        document.getElementById('btnLogout').style.display = '';
   await Promise.all([refreshUsers(), refreshFriends(), refreshRequests()]);
   await startHub();
   await restoreLastChat();
       } catch {
         me = null;
-    document.getElementById('meBox').textContent = 'Giriş yapılmadı';
-    // UI: show login/register again and clear welcome
-    document.getElementById('welcomeUser').textContent = '';
-    document.getElementById('btnShowRegister').style.display = '';
-    document.getElementById('btnShowLogin').style.display = '';
-    document.getElementById('btnLogout').style.display = 'none';
+  document.getElementById('meBox').textContent = 'Giriş yapılmadı';
+  // UI: show login/register again and clear welcome
+  document.getElementById('welcomeUser').textContent = '';
+  document.getElementById('btnShowRegister').style.display = '';
+  document.getElementById('btnShowLogin').style.display = '';
+  document.getElementById('btnLogout').style.display = 'none';
       }
     }
 
@@ -528,19 +550,40 @@
 
     // Modal submit handlers
     document.getElementById('btnRegister').onclick = async () => {
-      const email = document.getElementById('regEmail').value;
+      const form = document.getElementById('registerForm');
+      form.classList.add('was-validated');
+      if (!form.checkValidity()) { showToast('Lütfen formdaki hataları düzeltin.', 'warning'); return; }
+      const email = document.getElementById('regEmail').value.trim();
       const password = document.getElementById('regPassword').value;
-      const displayName = document.getElementById('regDisplayName').value;
-      await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, displayName }) });
-      alert('Kayıt başarılı, hoş geldiniz! Şimdi giriş yapın.');
-      bootstrap.Modal.getOrCreateInstance(regModalEl).hide();
+      const displayName = document.getElementById('regDisplayName').value.trim();
+      try {
+        await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, displayName }) });
+        showToast('Kayıt başarılı! Şimdi giriş yapabilirsiniz.', 'success');
+        form.reset();
+        form.classList.remove('was-validated');
+        bootstrap.Modal.getOrCreateInstance(regModalEl).hide();
+      } catch (e) {
+        console.error(e);
+        showToast('Kayıt başarısız: ' + (e.message || 'Hata oluştu'), 'error');
+      }
     };
     document.getElementById('btnLogin').onclick = async () => {
-      const email = document.getElementById('loginEmail').value;
+      const form = document.getElementById('loginForm');
+      form.classList.add('was-validated');
+      if (!form.checkValidity()) { showToast('Lütfen e-posta ve şifrenizi girin.', 'warning'); return; }
+      const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
-      await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-      await refreshMe();
-      bootstrap.Modal.getOrCreateInstance(loginModalEl).hide();
+      try {
+        await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+        await refreshMe();
+        showToast('Giriş başarılı. Hoş geldiniz!', 'success');
+        form.reset();
+        form.classList.remove('was-validated');
+        bootstrap.Modal.getOrCreateInstance(loginModalEl).hide();
+      } catch (e) {
+        console.error(e);
+        showToast('Giriş başarısız: ' + (e.message || 'Hatalı bilgiler'), 'error');
+      }
     };
     async function performLogout() {
       await api('/api/auth/logout', { method: 'POST' });
@@ -548,10 +591,11 @@
       document.getElementById('meBox').textContent = 'Çıkış yapıldı. Tekrar kayıt/giriş yapabilirsiniz.';
       document.getElementById('welcomeUser').textContent = '';
       localStorage.removeItem('lastChatUserId');
-      // Show login/register again; hide logout
-      document.getElementById('btnShowRegister').style.display = '';
-      document.getElementById('btnShowLogin').style.display = '';
-      document.getElementById('btnLogout').style.display = 'none';
+  // Show login/register again; hide logout
+  document.getElementById('btnShowRegister').style.display = '';
+  document.getElementById('btnShowLogin').style.display = '';
+  document.getElementById('btnLogout').style.display = 'none';
+  showToast('Çıkış yapıldı.', 'success');
     }
     document.getElementById('btnLogout').onclick = performLogout;
 
