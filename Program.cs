@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using RedisChatApp.Hubs;
 using RedisChatApp.Services;
 using RedisChatApp.Data;
 using RedisChatApp.Models;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,22 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 	.AddEntityFrameworkStores<AppDbContext>()
 	.AddDefaultTokenProviders();
 builder.Services.AddHttpContextAccessor();
+
+// Data Protection key persistence (persist across container restarts)
+// If running in container with /data volume, store keys under /data/keys
+try
+{
+	const string keysRoot = "/data";
+	if (Directory.Exists(keysRoot))
+	{
+		var keysPath = Path.Combine(keysRoot, "keys");
+		Directory.CreateDirectory(keysPath);
+		builder.Services.AddDataProtection()
+			.PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+			.SetApplicationName("RedisChatApp");
+	}
+}
+catch { /* ignore, fallback to default location */ }
 
 // SignalR
 builder.Services.AddSignalR();
