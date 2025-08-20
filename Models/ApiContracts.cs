@@ -4,4 +4,5 @@ namespace RedisChatApp.Models
     public record LoginRequest(string email, string password);
     public record FriendRequestCreate(string toUserId);
     public record FriendRespondRequest(int requestId, bool accept);
+    public record ForgotPasswordRequest(string email);
 }

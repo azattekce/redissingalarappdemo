@@ -1,0 +1,41 @@
+/* Global */
+.vh-80 { height: 80vh; }
+.scroll { overflow-y: auto; }
+
+/* Avatars */
+.avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.avatar-lg { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+
+/* Users list: ~10 rows visible with scroll */
+.users-scroll { max-height: 420px; overflow-y: auto; }
+
+/* Chat message bubble with avatar */
+.msg-bubble { border-radius: .5rem; padding: .25rem .5rem; max-width: 75%; word-break: break-word; }
+.msg-wrap { gap: .5rem; }
+
+/* Video call layout */
+.video-wrapper { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.video-large { width: 100%; background: #000; border-radius: 6px; transition: transform .1s ease-out; }
+.video-small { position: absolute; right: 12px; bottom: 12px; width: 160px; border: 2px solid #fff; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,.4); }
+.video-small.large { width: 260px; }
+.video-stage { position: relative; overflow: hidden; height: 60vh; }
+.video-controls { position: absolute; left: 12px; top: 12px; display: flex; gap: .35rem; z-index: 5; }
+.ctrl-btn { width: 32px; height: 32px; border-radius: .4rem; border: 0; background: rgba(0,0,0,.45); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.ctrl-btn:hover { background: rgba(0,0,0,.6); }
+
+/* Friends list icon-only actions & responsiveness */
+.friend-actions { display: flex; align-items: center; gap: .25rem; flex-wrap: nowrap; white-space: nowrap; }
+.friend-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+.icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: .4rem; color: inherit; padding: 0; }
+.icon-btn:hover { background: rgba(0,0,0,.06); }
+.icon-btn.primary { color: #0d6efd; }
+.icon-btn.secondary { color: #6c757d; }
+.icon-btn.danger { color: #dc3545; }
+.icon-btn.dark { color: #212529; }
+@media (max-width: 576px) { .icon-btn { width: 26px; height: 26px; } }
+
+/* Landing page tweaks */
+#landingShell .display-3 { font-size: 3.2rem; }
+@media (max-width: 576px) {
+  #landingShell .display-3 { font-size: 2.4rem; }
+}

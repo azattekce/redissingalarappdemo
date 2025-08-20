@@ -10,6 +10,7 @@ using RedisChatApp.Services;
 using RedisChatApp.Data;
 using RedisChatApp.Models;
 using System.IO;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,7 @@ catch { /* ignore, fallback to default location */ }
 builder.Services.AddSignalR();
 // Redis background subscriber
 builder.Services.AddHostedService<ChatRedisSubscriber>();
+builder.Services.AddSingleton<EmailService>();
 
 var app = builder.Build();
 
@@ -88,6 +90,25 @@ app.MapPost("/api/auth/logout", async (SignInManager<ApplicationUser> signInMana
 {
 	await signInManager.SignOutAsync();
 	return Results.Ok();
+});
+
+// Password reset: send a simple rule to user's email
+app.MapPost("/api/auth/forgot", async (UserManager<ApplicationUser> userManager, EmailService mail, ForgotPasswordRequest req) =>
+{
+	var user = await userManager.FindByEmailAsync(req.email);
+	if (user == null) return Results.Ok(); // do not reveal
+	// Simple temporary password by rule: first 3 of email + "@" + last 3 reversed (demo only)
+	var local = req.email.Split('@')[0];
+	var temp = (local.Length >= 3 ? local[..3] : local) + "@" + new string((local.Length >= 3 ? local[^3..] : local).ToCharArray().Reverse().ToArray());
+	if (temp.Length < 6) temp = temp + "123";
+	var token = await userManager.GeneratePasswordResetTokenAsync(user);
+	var result = await userManager.ResetPasswordAsync(user, token, temp);
+	if (result.Succeeded)
+	{
+		await mail.SendAsync(user.Email!, "Joker Chat - Geçici Şifre", $"Geçici şifreniz: {temp}\nLütfen giriş yapıp şifrenizi değiştirin.");
+		return Results.Ok();
+	}
+	return Results.BadRequest(result.Errors);
 });
 
 app.MapGet("/api/auth/me", async (UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor) =>

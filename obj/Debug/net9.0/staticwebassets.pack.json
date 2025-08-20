@@ -1,8 +1,16 @@
 {
   "Files": [
     {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\app.js",
+      "PackagePath": "staticwebassets\\app.js"
+    },
+    {
       "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
       "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\site.css",
+      "PackagePath": "staticwebassets\\site.css"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.RedisChatApp.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
