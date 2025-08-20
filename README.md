@@ -173,6 +173,31 @@ sequenceDiagram
 - ASP.NET Core Identity (Cookie Authentication)
 - Bootstrap 5 (UI) + Vanilla JavaScript (SignalR JS Client)
 
+## Redis ve SQLite Rolleri
+
+### Redis ne yapıyor? (Gerçek zamanlı pub/sub)
+
+- Amaç: Mesajları anında ilgili kullanıcıya iletmek ve çoklu uygulama örneğinde (scale-out) dağıtımı sağlamak.
+- Akış:
+  - Kullanıcı A mesaj gönderir → ChatHub önce mesajı DB’ye yazar, ardından Redis kanalına yayınlar: `chat:{toUserId}`.
+  - Arka plan abonelik servisi (Hosted Service) Redis’te `chat:*` kanallarını dinler.
+  - Gelen yayınları `IHubContext` ile hedef kullanıcıya (SignalR) push eder.
+- Neden Redis: Düşük gecikme, pub/sub ile fan-out; birden fazla uygulama örneğinde mesajların tutarlı iletilmesi.
+- Not: Redis burada kalıcılık için kullanılmaz; cache/queue verisi tutulmaz.
+
+### SQLite ne yapıyor? (Kalıcı veritabanı)
+
+- Amaç: Uygulama verilerini kalıcı saklamak (kimlik, sosyal ilişkiler, mesaj geçmişi).
+- Saklanan başlıca varlıklar: `ApplicationUser`, `UserProfile`, `FriendRequest`, `FriendBlock`, `ChatMessage` (yumuşak silme bayrakları ile).
+- Akış: Mesaj gönderimde önce `ChatMessage` verisi DB’ye yazılır; geçmiş bu tablodan çekilir. Arkadaşlık/engelleme kontrolleri de DB üzerindendir.
+- Neden SQLite: Dosya tabanlı, kurulum gerektirmez; geliştirme/demo için idealdir. Üretimde PostgreSQL/SQL Server’a taşınabilir.
+
+### Özet akış (ikisini birlikte)
+
+1) Hub: Mesajı DB’ye kaydet (SQLite).
+2) Hub: Redis’e publish et (`chat:{toUserId}`).
+3) Subscriber: Redis’ten al, SignalR ile alıcıya anlık ilet.
+
 ## Yapılandırma
 
 `appsettings.json` örneği:
