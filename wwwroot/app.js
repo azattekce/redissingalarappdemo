@@ -8,6 +8,60 @@ const userCache = new Map();
 const avatarCache = new Map(); // userId -> avatar url
 let myAvatarUrl = null;
 
+// --- UI toggle helpers ---
+function showAppShellUI() {
+  const landing = document.getElementById('landingShell');
+  const app = document.getElementById('appShell');
+  if (landing) {
+    landing.style.display = 'none';
+    landing.classList.add('d-none');
+    landing.setAttribute('hidden', 'true');
+  // Remove from DOM to avoid any layout residue
+  try { landing.remove(); } catch {}
+  }
+  if (app) app.style.display = '';
+  const btnReg = document.getElementById('btnShowRegister');
+  const btnLogin = document.getElementById('btnShowLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnReg) btnReg.style.display = 'none';
+  if (btnLogin) btnLogin.style.display = 'none';
+  if (btnLogout) btnLogout.style.display = '';
+  try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch { window.scrollTo(0,0); }
+  document.body.classList.add('authenticated');
+}
+
+function showLandingShellUI() {
+  let landing = document.getElementById('landingShell');
+  const app = document.getElementById('appShell');
+  (async () => {
+    if (!landing) {
+      // Re-inject landing fragment if it was removed
+      try {
+        const res = await fetch('/fragments/landing.html', { cache: 'no-cache' });
+        const html = await res.text();
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const node = wrapper.firstElementChild;
+        document.body.insertBefore(node, document.body.firstChild);
+        landing = node;
+      } catch (e) { console.error('Landing re-inject failed', e); }
+    }
+    if (landing) {
+      landing.removeAttribute('hidden');
+      landing.classList.remove('d-none');
+      landing.style.display = '';
+    }
+  })();
+  if (app) app.style.display = 'none';
+  const btnReg = document.getElementById('btnShowRegister');
+  const btnLogin = document.getElementById('btnShowLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnReg) btnReg.style.display = '';
+  if (btnLogin) btnLogin.style.display = '';
+  if (btnLogout) btnLogout.style.display = 'none';
+  document.body.classList.remove('authenticated');
+}
+
 // --- WebRTC state ---
 const rtc = {
   pc: null,
@@ -272,11 +326,7 @@ async function refreshMe() {
         <span>Hoş geldin, <strong>${me.displayName || me.email}</strong></span>
         <button class="btn btn-sm btn-outline-secondary" onclick="openMyProfile()">Bilgilerim</button>
       </div>`;
-    document.getElementById('btnShowRegister').style.display = 'none';
-    document.getElementById('btnShowLogin').style.display = 'none';
-    document.getElementById('btnLogout').style.display = '';
-    document.getElementById('landingShell').style.display = 'none';
-    document.getElementById('appShell').style.display = '';
+  showAppShellUI();
     await Promise.all([refreshUsers(), refreshFriends(), refreshRequests()]);
     await startHub();
     await restoreLastChat();
@@ -284,11 +334,7 @@ async function refreshMe() {
     me = null;
     document.getElementById('meBox').textContent = 'Giriş yapılmadı';
     document.getElementById('welcomeUser').textContent = '';
-    document.getElementById('btnShowRegister').style.display = '';
-    document.getElementById('btnShowLogin').style.display = '';
-    document.getElementById('btnLogout').style.display = 'none';
-    document.getElementById('landingShell').style.display = '';
-    document.getElementById('appShell').style.display = 'none';
+  showLandingShellUI();
   }
 }
 
@@ -449,7 +495,9 @@ document.getElementById('btnLogin').onclick = async () => {
   const password = document.getElementById('loginPassword').value;
   try {
     await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-    await refreshMe();
+  // Immediately hide login UI for snappy UX, then load data
+  showAppShellUI();
+  await refreshMe();
     showToast('Giriş başarılı. Hoş geldiniz!', 'success');
     form.reset();
     form.classList.remove('was-validated');
@@ -467,7 +515,9 @@ if (btnLandingLogin) btnLandingLogin.onclick = async () => {
   if (!email || !password) { showToast('E-posta ve şifre gerekli.', 'warning'); return; }
   try {
     await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-    await refreshMe();
+  // Immediately hide landing UI, then load data
+  showAppShellUI();
+  await refreshMe();
   } catch (e) {
     console.error(e);
     showToast('Giriş başarısız: ' + (e.message || 'Hatalı bilgiler'), 'error');
@@ -498,11 +548,7 @@ async function performLogout() {
   document.getElementById('meBox').textContent = 'Çıkış yapıldı. Tekrar kayıt/giriş yapabilirsiniz.';
   document.getElementById('welcomeUser').textContent = '';
   localStorage.removeItem('lastChatUserId');
-  document.getElementById('btnShowRegister').style.display = '';
-  document.getElementById('btnShowLogin').style.display = '';
-  document.getElementById('btnLogout').style.display = 'none';
-  document.getElementById('landingShell').style.display = '';
-  document.getElementById('appShell').style.display = 'none';
+  showLandingShellUI();
   showToast('Çıkış yapıldı.', 'success');
 }
 document.getElementById('btnLogout').onclick = performLogout;
