@@ -3,20 +3,45 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Atek-RedisChatApp</title>
+  <title>joker-ChatApp</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
     .vh-80 { height: 80vh; }
     .scroll { overflow-y: auto; }
   .avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
   .avatar-lg { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+  /* Users list: ~10 rows visible with scroll */
+  .users-scroll { max-height: 420px; overflow-y: auto; }
+  /* Chat message bubble with avatar */
+  .msg-bubble { border-radius: .5rem; padding: .25rem .5rem; max-width: 75%; word-break: break-word; }
+  .msg-wrap { gap: .5rem; }
+  /* Video call layout */
+  .video-wrapper { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .video-large { width: 100%; background: #000; border-radius: 6px; transition: transform .1s ease-out; }
+  .video-small { position: absolute; right: 12px; bottom: 12px; width: 160px; border: 2px solid #fff; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,.4); }
+  .video-small.large { width: 260px; }
+  .video-stage { position: relative; overflow: hidden; height: 60vh; }
+  .video-controls { position: absolute; left: 12px; top: 12px; display: flex; gap: .35rem; z-index: 5; }
+  .ctrl-btn { width: 32px; height: 32px; border-radius: .4rem; border: 0; background: rgba(0,0,0,.45); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+  .ctrl-btn:hover { background: rgba(0,0,0,.6); }
+  /* Friends list icon-only actions & responsiveness */
+  .friend-actions { display: flex; align-items: center; gap: .25rem; flex-wrap: nowrap; white-space: nowrap; }
+  .friend-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+  .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: .4rem; color: inherit; padding: 0; }
+  .icon-btn:hover { background: rgba(0,0,0,.06); }
+  .icon-btn.primary { color: #0d6efd; }
+  .icon-btn.secondary { color: #6c757d; }
+  .icon-btn.danger { color: #dc3545; }
+  .icon-btn.dark { color: #212529; }
+  @media (max-width: 576px) { .icon-btn { width: 26px; height: 26px; } }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous"></script>
 </head>
 <body class="bg-light">
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="m-0">ATek-RedisChatApp</h1>
+      <h1 class="m-0">Joker-ChatApp</h1>
       <div class="d-flex align-items-center gap-2">
         <div id="welcomeUser" class="text-muted me-2"></div>
         <button id="btnShowRegister" class="btn btn-sm btn-outline-primary">Kayıt Ol</button>
@@ -35,7 +60,10 @@
 
         <div class="card mb-3">
           <div class="card-header">Kullanıcılar</div>
-          <ul id="usersList" class="list-group list-group-flush scroll vh-80"></ul>
+          <div class="card-body pt-2 pb-2">
+            <input id="usersSearch" class="form-control form-control-sm" placeholder="Ara (isim veya e-posta)" />
+          </div>
+          <ul id="usersList" class="list-group users-scroll"></ul>
         </div>
 
         <div class="card mb-3">
@@ -228,12 +256,57 @@
     </div>
   </div>
 
+      <!-- Video Call Modal -->
+      <div class="modal fade" id="videoCallModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Görüntülü Görüşme</h5>
+              <div class="d-flex align-items-center gap-2">
+                <button id="btnModalWide" class="btn btn-sm btn-outline-secondary" type="button" title="Genişlet (XL)"><i class="bi bi-arrows-angle-expand"></i></button>
+                <button id="btnModalFull" class="btn btn-sm btn-outline-secondary" type="button" title="Tam Ekran"><i class="bi bi-fullscreen"></i></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+            </div>
+            <div class="modal-body">
+              <div class="video-wrapper">
+                <div class="video-stage">
+                  <video id="remoteVideo" class="video-large" autoplay playsinline></video>
+                  <video id="localVideo" class="video-small" autoplay playsinline muted></video>
+                  <div class="video-controls">
+                    <button id="btnZoomOut" class="ctrl-btn" title="Uzaklaştır"><i class="bi bi-zoom-out"></i></button>
+                    <button id="btnZoomIn" class="ctrl-btn" title="Yakınlaştır"><i class="bi bi-zoom-in"></i></button>
+                    <button id="btnZoomReset" class="ctrl-btn" title="Sıfırla"><i class="bi bi-aspect-ratio"></i></button>
+                    <button id="btnPipSize" class="ctrl-btn" title="Önizleme Büyüt/Küçült"><i class="bi bi-aspect-ratio-fill"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 d-flex gap-2">
+                <button id="btnHangup" type="button" class="btn btn-danger">Görüşmeyi Bitir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let me = null;
     let activeFriendId = null;
     const chatMessages = document.getElementById('chatMessages');
   const userCache = new Map();
+  const avatarCache = new Map(); // userId -> avatar url
+  let myAvatarUrl = null;
+
+        // --- WebRTC state ---
+        const rtc = {
+          pc: null,
+          localStream: null,
+          remoteStream: null,
+          peerId: null,
+          isCaller: false
+        };
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl('/chat')
@@ -253,24 +326,101 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     });
 
+    // --- WebRTC SignalR handlers ---
+    connection.on('RtcOffer', async (fromUserId, offerJson) => {
+      try {
+        const offer = JSON.parse(offerJson);
+        if (rtc.pc && rtc.peerId && rtc.peerId !== fromUserId) {
+          showToast('Meşgulsünüz, gelen çağrı reddedildi.', 'warning');
+          return;
+        }
+        rtc.isCaller = false;
+        rtc.peerId = fromUserId;
+        await openVideoModal();
+        await ensurePeerConnection();
+        await rtc.pc.setRemoteDescription(new RTCSessionDescription(offer));
+        await ensureLocalStream();
+        const answer = await rtc.pc.createAnswer();
+        await rtc.pc.setLocalDescription(answer);
+        await connection.invoke('RtcAnswer', fromUserId, JSON.stringify(answer));
+      } catch (e) {
+        console.error(e);
+        showToast('Çağrı alınamadı.', 'error');
+      }
+    });
+    connection.on('RtcAnswer', async (fromUserId, answerJson) => {
+      try {
+        if (!rtc.pc || rtc.peerId !== fromUserId) return;
+        const answer = JSON.parse(answerJson);
+        await rtc.pc.setRemoteDescription(new RTCSessionDescription(answer));
+      } catch (e) { console.error(e); }
+    });
+    connection.on('RtcIceCandidate', async (fromUserId, candidateJson) => {
+      try {
+        if (!rtc.pc || rtc.peerId !== fromUserId) return;
+        const cand = JSON.parse(candidateJson);
+        await rtc.pc.addIceCandidate(new RTCIceCandidate(cand));
+      } catch (e) { console.error(e); }
+    });
+    connection.on('RtcHangup', async (fromUserId) => {
+      if (rtc.peerId === fromUserId) {
+        showToast('Karşı taraf görüşmeyi sonlandırdı.', 'info');
+        await endCall(false);
+      }
+    });
+
     function renderMessageBubble(m, mine, nameOverride) {
       const row = document.createElement('div');
       row.className = `d-flex ${mine ? 'justify-content-end' : 'justify-content-start'} my-1`;
-      const bubble = document.createElement('div');
-      bubble.className = `border rounded px-2 py-1 ${mine ? 'bg-primary text-white' : 'bg-light'}`;
-      const senderName = nameOverride ?? (mine ? (me?.displayName || me?.email || 'Ben') : (userCache.get(m.fromUserId || m.FromUserId) || ''));
-      const content = m.content || m.Content || '';
-      bubble.textContent = `${senderName ? senderName + ': ' : ''}${content}`;
-      // delete button (only for mine or theirs shown to me)
-      const btn = document.createElement('button');
-      btn.className = `btn btn-sm ${mine ? 'btn-light' : 'btn-outline-secondary'} ms-2`;
-      btn.textContent = 'Sil';
-      btn.onclick = async () => { await api(`/api/messages/${m.id || m.Id}/delete`, { method: 'POST' }); await loadHistory(activeFriendId); };
       const wrap = document.createElement('div');
-      wrap.className = 'd-flex align-items-center';
-      wrap.appendChild(bubble); wrap.appendChild(btn);
+      wrap.className = `d-flex align-items-end msg-wrap ${mine ? 'flex-row-reverse' : ''}`;
+
+      const fromId = m.fromUserId || m.FromUserId;
+      const img = document.createElement('img');
+      img.className = 'avatar-small';
+      img.src = mine ? (myAvatarUrl || defaultAvatarSvg()) : (avatarCache.get(fromId) || defaultAvatarSvg());
+      img.onerror = () => { img.src = defaultAvatarSvg(); };
+      if (!mine && !avatarCache.has(fromId)) ensureAvatarLoaded(fromId, img);
+
+      const bubble = document.createElement('div');
+      bubble.className = `msg-bubble ${mine ? 'bg-primary text-white' : 'bg-light'}`;
+      const senderName = nameOverride ?? (mine ? (me?.displayName || me?.email || 'Ben') : (userCache.get(fromId) || ''));
+      const content = m.content || m.Content || '';
+      const nameEl = document.createElement('div');
+      nameEl.className = `small ${mine ? 'text-white-50' : 'text-muted'}`;
+      nameEl.textContent = senderName || '';
+      const textEl = document.createElement('div');
+      textEl.textContent = content;
+      bubble.appendChild(nameEl); bubble.appendChild(textEl);
+
+      if (mine) { wrap.appendChild(bubble); wrap.appendChild(img); }
+      else { wrap.appendChild(img); wrap.appendChild(bubble); }
+
+      if (m.id || m.Id) {
+        const del = document.createElement('button');
+        del.className = `btn btn-sm ${mine ? 'btn-light' : 'btn-outline-secondary'} ms-2`;
+        del.title = 'Sil';
+        del.innerHTML = '<i class="bi bi-trash"></i>';
+        del.onclick = async () => { await api(`/api/messages/${m.id || m.Id}/delete`, { method: 'POST' }); await loadHistory(activeFriendId); };
+        wrap.appendChild(del);
+      }
+
       row.appendChild(wrap);
       return row;
+    }
+
+    function defaultAvatarSvg() {
+      return "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
+    }
+
+    async function ensureAvatarLoaded(userId, imgEl) {
+      try {
+        const u = await api(`/api/users/${userId}`);
+        const url = u.profile?.avatarUrl || defaultAvatarSvg();
+        avatarCache.set(userId, url);
+        if (imgEl) imgEl.src = url;
+        if (!userCache.has(userId)) userCache.set(userId, u.displayName || u.email || userId);
+      } catch {}
     }
 
   async function loadHistory(otherId) {
@@ -410,8 +560,8 @@
       try {
         me = await api('/api/auth/me');
         // fetch profile to get avatar
-        const p = await api('/api/profile');
-        const avatar = p?.profile?.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
+  const p = await api('/api/profile');
+  myAvatarUrl = p?.profile?.avatarUrl || defaultAvatarSvg();
         document.getElementById('meBox').textContent = `${me.displayName || me.email} (${me.id})`;
         // UI: show welcome with avatar + action icons and hide big auth buttons
         document.getElementById('welcomeUser').innerHTML = `
@@ -444,14 +594,18 @@
       const friendSet = new Set((friends || []).map(f => f.id));
       const ul = document.getElementById('usersList');
       ul.innerHTML = '';
-      users.filter(u => u.id !== me.id).forEach(u => {
+      const term = (document.getElementById('usersSearch')?.value || '').trim().toLowerCase();
+      users.filter(u => u.id !== me.id)
+        .filter(u => !term || (u.displayName || u.email || '').toLowerCase().includes(term))
+        .forEach(u => {
         userCache.set(u.id, u.displayName || u.email);
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex align-items-center justify-content-between';
         const left = document.createElement('div'); left.className = 'd-flex align-items-center gap-2';
         const img = document.createElement('img'); img.className = 'avatar-small'; img.alt = 'avatar';
-        img.src = u.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
-        img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>"; };
+        const avatarUrl = u.avatarUrl || defaultAvatarSvg();
+        img.src = avatarUrl; img.onerror = ()=>{ img.src = defaultAvatarSvg(); };
+        avatarCache.set(u.id, avatarUrl);
         const name = document.createElement('span'); name.textContent = `${u.displayName || u.email}`;
         left.appendChild(img); left.appendChild(name);
         if (friendSet.has(u.id)) {
@@ -493,19 +647,28 @@
         userCache.set(f.id, f.displayName || f.email);
         const li = document.createElement('li');
         li.className = 'list-group-item d-flex justify-content-between align-items-center';
-        const left = document.createElement('div'); left.className = 'd-flex align-items-center gap-2';
+        const left = document.createElement('div'); left.className = 'd-flex align-items-center gap-2 flex-grow-1 overflow-hidden';
         const img = document.createElement('img'); img.className = 'avatar-small'; img.alt = 'avatar';
         img.src = f.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
         img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>"; };
-        const name = document.createElement('span'); name.textContent = `${f.displayName || f.email}`;
+        const name = document.createElement('span'); name.className = 'friend-name'; name.textContent = `${f.displayName || f.email}`;
         left.appendChild(img); left.appendChild(name);
         left.style.cursor = 'pointer';
         left.onclick = () => openFriendProfile(f.id);
-        const wrap = document.createElement('div');
-  const chatBtn = document.createElement('button'); chatBtn.className = 'btn btn-sm btn-primary me-1'; chatBtn.textContent = 'Sohbet'; chatBtn.onclick = async () => { await setActiveChat(f.id, f.displayName || f.email); document.getElementById('chatInput').focus(); };
-  const profBtn = document.createElement('button'); profBtn.className = 'btn btn-sm btn-outline-secondary me-1'; profBtn.textContent = 'Profil'; profBtn.onclick = async () => { await openFriendProfile(f.id); };
+        const wrap = document.createElement('div'); wrap.className = 'friend-actions d-flex align-items-center gap-1 flex-shrink-0';
+        const chatBtn = document.createElement('button'); chatBtn.className = 'icon-btn primary'; chatBtn.title = 'Sohbet';
+        chatBtn.innerHTML = '<i class="bi bi-chat-dots"></i>';
+        chatBtn.onclick = async () => { await setActiveChat(f.id, f.displayName || f.email); document.getElementById('chatInput').focus(); };
+        const profBtn = document.createElement('button'); profBtn.className = 'icon-btn secondary'; profBtn.title = 'Profil';
+        profBtn.innerHTML = '<i class="bi bi-person"></i>';
+        profBtn.onclick = async () => { await openFriendProfile(f.id); };
+        const videoBtn = document.createElement('button'); videoBtn.className = 'icon-btn primary'; videoBtn.title = 'Görüntülü Görüşme';
+        videoBtn.innerHTML = '<i class="bi bi-camera-video"></i>';
+        videoBtn.onclick = async () => { await startVideoCall(f.id); };
         const blocked = blocks.includes(f.id);
-        const blockBtn = document.createElement('button'); blockBtn.className = `btn btn-sm ${blocked ? 'btn-danger' : 'btn-outline-danger'} me-1`; blockBtn.textContent = blocked ? 'Engeli Kaldır' : 'Engelle'; blockBtn.onclick = async ()=>{
+        const blockBtn = document.createElement('button'); blockBtn.className = `icon-btn ${blocked ? 'secondary' : 'danger'}`; blockBtn.title = blocked ? 'Engeli Kaldır' : 'Engelle';
+        blockBtn.innerHTML = '<i class="bi bi-slash-circle"></i>';
+        blockBtn.onclick = async ()=>{
           if (blocks.includes(f.id)) {
             await api('/api/friends/unblock', { method:'POST', body: JSON.stringify({ userId: f.id }) });
           } else {
@@ -513,8 +676,10 @@
           }
           await refreshFriends();
         };
-        const removeBtn = document.createElement('button'); removeBtn.className = 'btn btn-sm btn-outline-dark'; removeBtn.textContent = 'Sil'; removeBtn.onclick = async ()=>{ await api('/api/friends/remove', { method:'POST', body: JSON.stringify({ userId: f.id }) }); await refreshFriends(); };
-        wrap.appendChild(chatBtn); wrap.appendChild(profBtn); wrap.appendChild(blockBtn); wrap.appendChild(removeBtn);
+        const removeBtn = document.createElement('button'); removeBtn.className = 'icon-btn dark'; removeBtn.title = 'Sil';
+        removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+        removeBtn.onclick = async ()=>{ await api('/api/friends/remove', { method:'POST', body: JSON.stringify({ userId: f.id }) }); await refreshFriends(); };
+        wrap.appendChild(chatBtn); wrap.appendChild(profBtn); wrap.appendChild(videoBtn); wrap.appendChild(blockBtn); wrap.appendChild(removeBtn);
   li.appendChild(left);
   li.appendChild(wrap);
         ul.appendChild(li);
@@ -550,6 +715,8 @@
     const loginModalEl = document.getElementById('loginModal');
     document.getElementById('btnShowRegister').onclick = () => bootstrap.Modal.getOrCreateInstance(regModalEl).show();
     document.getElementById('btnShowLogin').onclick = () => bootstrap.Modal.getOrCreateInstance(loginModalEl).show();
+  const usersSearchEl = document.getElementById('usersSearch');
+  if (usersSearchEl) usersSearchEl.addEventListener('input', () => { refreshUsers(); });
 
     // Modal submit handlers
     document.getElementById('btnRegister').onclick = async () => {
@@ -614,6 +781,157 @@
         input.value = '';
       } catch (err) { console.error(err); }
     };
+
+    // ---------- WebRTC helpers ----------
+    async function openVideoModal() {
+      const modalEl = document.getElementById('videoCallModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      // Resize controls: wide and fullscreen
+      const dialogEl = modalEl.querySelector('.modal-dialog');
+      const btnWide = document.getElementById('btnModalWide');
+      const btnFull = document.getElementById('btnModalFull');
+      if (btnWide) {
+        btnWide.onclick = () => {
+          dialogEl.classList.toggle('modal-xl');
+        };
+      }
+      if (btnFull) {
+        btnFull.onclick = async () => {
+          try {
+            if (!document.fullscreenElement) {
+              await modalEl.requestFullscreen();
+              btnFull.innerHTML = '<i class="bi bi-fullscreen-exit"></i>';
+            } else {
+              await document.exitFullscreen();
+              btnFull.innerHTML = '<i class="bi bi-fullscreen"></i>';
+            }
+          } catch {}
+        };
+      }
+      // Bind hangup button once
+      const btn = document.getElementById('btnHangup');
+      btn.onclick = async () => { await endCall(true); };
+      // Bind zoom controls
+      const rv = document.getElementById('remoteVideo');
+      const lv = document.getElementById('localVideo');
+      let zoom = 1, offsetX = 0, offsetY = 0; // state per modal session
+      const applyTransform = () => {
+        rv.style.transform = `scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`;
+        rv.style.transformOrigin = 'center center';
+      };
+      const clampZoom = (z) => Math.max(1, Math.min(4, z));
+      document.getElementById('btnZoomIn').onclick = () => { zoom = clampZoom(zoom + 0.2); applyTransform(); };
+      document.getElementById('btnZoomOut').onclick = () => { zoom = clampZoom(zoom - 0.2); applyTransform(); };
+      document.getElementById('btnZoomReset').onclick = () => { zoom = 1; offsetX = 0; offsetY = 0; applyTransform(); };
+      document.getElementById('btnPipSize').onclick = () => { lv.classList.toggle('large'); };
+
+      // Drag to pan when zoomed
+      let dragging = false, startX = 0, startY = 0;
+      const stage = modalEl.querySelector('.video-stage');
+      stage.onmousedown = (e) => { if (zoom <= 1) return; dragging = true; startX = e.clientX; startY = e.clientY; e.preventDefault(); };
+      window.onmouseup = () => { dragging = false; };
+      window.onmousemove = (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX; const dy = e.clientY - startY;
+        startX = e.clientX; startY = e.clientY;
+        offsetX += dx / zoom; offsetY += dy / zoom; // adjust by zoom to feel natural
+        applyTransform();
+      };
+      // Cleanup when modal hidden
+      modalEl.addEventListener('hidden.bs.modal', async () => {
+        if (rtc.pc) await endCall(true);
+        // reset transforms and handlers
+        zoom = 1; offsetX = 0; offsetY = 0; applyTransform();
+        stage.onmousedown = null; window.onmouseup = null; window.onmousemove = null;
+        lv.classList.remove('large');
+        // reset size state
+        if (document.fullscreenElement) { try { await document.exitFullscreen(); } catch {} }
+        dialogEl.classList.remove('modal-xl');
+      }, { once: true });
+    }
+
+    async function ensureLocalStream() {
+      if (rtc.localStream) return rtc.localStream;
+      try {
+        rtc.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const lv = document.getElementById('localVideo');
+        if (lv) lv.srcObject = rtc.localStream;
+        if (rtc.pc) rtc.localStream.getTracks().forEach(t => rtc.pc.addTrack(t, rtc.localStream));
+        return rtc.localStream;
+      } catch (e) {
+        showToast('Kamera/Mikrofon erişimi reddedildi.', 'error');
+        throw e;
+      }
+    }
+
+    async function ensurePeerConnection() {
+      if (rtc.pc) return rtc.pc;
+      rtc.pc = new RTCPeerConnection(rtcConfig);
+      rtc.pc.onicecandidate = async (e) => {
+        if (e.candidate && rtc.peerId) {
+          try { await connection.invoke('RtcIceCandidate', rtc.peerId, JSON.stringify(e.candidate)); } catch {}
+        }
+      };
+      rtc.pc.ontrack = (e) => {
+        const rv = document.getElementById('remoteVideo');
+        if (rv) rv.srcObject = e.streams[0];
+        rtc.remoteStream = e.streams[0];
+      };
+      rtc.pc.onconnectionstatechange = async () => {
+        const s = rtc.pc?.connectionState;
+        if (s === 'failed' || s === 'disconnected' || s === 'closed') {
+          await endCall(false);
+        }
+      };
+      // If we already had local stream (e.g., restarted), attach tracks
+      if (rtc.localStream) rtc.localStream.getTracks().forEach(t => rtc.pc.addTrack(t, rtc.localStream));
+      return rtc.pc;
+    }
+
+    async function startVideoCall(toUserId) {
+      try {
+        if (rtc.pc && rtc.peerId && rtc.peerId !== toUserId) {
+          showToast('Zaten bir görüşme devam ediyor.', 'warning');
+          return;
+        }
+        rtc.isCaller = true;
+        rtc.peerId = toUserId;
+        await openVideoModal();
+        await ensurePeerConnection();
+        await ensureLocalStream();
+        const offer = await rtc.pc.createOffer();
+        await rtc.pc.setLocalDescription(offer);
+        await connection.invoke('RtcOffer', toUserId, JSON.stringify(offer));
+      } catch (e) {
+        console.error(e);
+        showToast('Çağrı başlatılamadı.', 'error');
+        await endCall(false);
+      }
+    }
+
+    async function endCall(notifyPeer) {
+      try {
+        if (notifyPeer && rtc.peerId) {
+          try { await connection.invoke('RtcHangup', rtc.peerId); } catch {}
+        }
+        if (rtc.localStream) {
+          rtc.localStream.getTracks().forEach(t => t.stop());
+        }
+        if (rtc.pc) try { rtc.pc.close(); } catch {}
+      } finally {
+        rtc.pc = null;
+        rtc.localStream = null;
+        rtc.remoteStream = null;
+        rtc.peerId = null;
+        rtc.isCaller = false;
+        const lv = document.getElementById('localVideo'); if (lv) lv.srcObject = null;
+        const rv = document.getElementById('remoteVideo'); if (rv) rv.srcObject = null;
+        const modalEl = document.getElementById('videoCallModal');
+        const inst = bootstrap.Modal.getInstance(modalEl);
+        if (inst) inst.hide();
+      }
+    }
 
     refreshMe();
   </script>

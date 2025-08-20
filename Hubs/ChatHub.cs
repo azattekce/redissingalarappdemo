@@ -81,6 +81,65 @@ namespace RedisChatApp.Hubs
             }
         }
 
+        // ---- WebRTC Signaling for Video Calls (friends only) ----
+        private bool AreFriends(string a, string b)
+        {
+            return _db.FriendRequests.Any(f =>
+                ((f.FromUserId == a && f.ToUserId == b) || (f.FromUserId == b && f.ToUserId == a))
+                && f.Status == FriendRequestStatus.Accepted);
+        }
+
+        private bool IsBlockedEitherWay(string a, string b)
+        {
+            return _db.FriendBlocks.Any(bk =>
+                (bk.BlockerUserId == a && bk.BlockedUserId == b) ||
+                (bk.BlockerUserId == b && bk.BlockedUserId == a));
+        }
+
+        public async Task RtcOffer(string toUserId, string offerSdpJson)
+        {
+            var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+            if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                throw new HubException("Geçersiz kullanıcı.");
+            if (IsBlockedEitherWay(fromUserId, toUserId))
+                throw new HubException("Görüntülü çağrı engellendi.");
+            if (!AreFriends(fromUserId, toUserId))
+                throw new HubException("Önce arkadaş olunuz.");
+            await Clients.User(toUserId).SendAsync("RtcOffer", fromUserId, offerSdpJson);
+        }
+
+        public async Task RtcAnswer(string toUserId, string answerSdpJson)
+        {
+            var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+            if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                throw new HubException("Geçersiz kullanıcı.");
+            if (IsBlockedEitherWay(fromUserId, toUserId))
+                throw new HubException("Görüntülü çağrı engellendi.");
+            if (!AreFriends(fromUserId, toUserId))
+                throw new HubException("Önce arkadaş olunuz.");
+            await Clients.User(toUserId).SendAsync("RtcAnswer", fromUserId, answerSdpJson);
+        }
+
+        public async Task RtcIceCandidate(string toUserId, string candidateJson)
+        {
+            var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+            if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                throw new HubException("Geçersiz kullanıcı.");
+            if (IsBlockedEitherWay(fromUserId, toUserId) || !AreFriends(fromUserId, toUserId))
+                return; // sessizce yok say
+            await Clients.User(toUserId).SendAsync("RtcIceCandidate", fromUserId, candidateJson);
+        }
+
+        public async Task RtcHangup(string toUserId)
+        {
+            var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+            if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                return;
+            if (IsBlockedEitherWay(fromUserId, toUserId) || !AreFriends(fromUserId, toUserId))
+                return;
+            await Clients.User(toUserId).SendAsync("RtcHangup", fromUserId);
+        }
+
     public override Task OnConnectedAsync() => base.OnConnectedAsync();
     }
 }

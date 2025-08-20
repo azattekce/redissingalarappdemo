@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "53TtqhZveRIAdwy2g0WFX9uo2xyMJgOmXZbF7/Khg7U=",
+  "Hash": "vqdIOmk2kOwFy07JEu9ePpmnDk9bqKAW2YI4CfzBOCQ=",
   "Source": "RedisChatApp",
   "BasePath": "_content/RedisChatApp",
   "Mode": "Default",
@@ -17,12 +17,12 @@
   ],
   "Assets": [
     {
-      "Identity": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-akd22egpgs.gz",
+      "Identity": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-yjgk5tsrs7.gz",
       "SourceId": "RedisChatApp",
       "SourceType": "Discovered",
       "ContentRoot": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/RedisChatApp",
-      "RelativePath": "index#[.{fingerprint=akd22egpgs}]?.html.gz",
+      "RelativePath": "index#[.{fingerprint=yjgk5tsrs7}]?.html.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -31,8 +31,8 @@
       "RelatedAsset": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "bl7w5iquqd",
-      "Integrity": "kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0=",
+      "Fingerprint": "3ngb5d06ms",
+      "Integrity": "/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html"
@@ -52,8 +52,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "akd22egpgs",
-      "Integrity": "1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE=",
+      "Fingerprint": "yjgk5tsrs7",
+      "Integrity": "MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\index.html"
@@ -61,13 +61,13 @@
   ],
   "Endpoints": [
     {
-      "Route": "index.akd22egpgs.html",
-      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-akd22egpgs.gz",
+      "Route": "index.html",
+      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-yjgk5tsrs7.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000141683196"
+          "Quality": "0.000096908615"
         }
       ],
       "ResponseHeaders": [
@@ -77,19 +77,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7057"
+          "Value": "10318"
         },
         {
           "Name": "ETag",
-          "Value": "\"kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0=\""
+          "Value": "\"/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
+          "Value": "no-cache"
         },
         {
           "Name": "Content-Encoding",
@@ -105,26 +105,18 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE=\""
+          "Value": "W/\"MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E=\""
         }
       ],
       "EndpointProperties": [
         {
-          "Name": "fingerprint",
-          "Value": "akd22egpgs"
-        },
-        {
-          "Name": "label",
-          "Value": "index.html"
-        },
-        {
           "Name": "integrity",
-          "Value": "sha256-1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE="
+          "Value": "sha256-MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E="
         }
       ]
     },
     {
-      "Route": "index.akd22egpgs.html",
+      "Route": "index.html",
       "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
       "Selectors": [],
       "ResponseHeaders": [
@@ -134,7 +126,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "33027"
+          "Value": "46280"
         },
         {
           "Name": "Content-Type",
@@ -142,11 +134,156 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE=\""
+          "Value": "\"MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E="
+        }
+      ]
+    },
+    {
+      "Route": "index.html.gz",
+      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-yjgk5tsrs7.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10318"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8="
+        }
+      ]
+    },
+    {
+      "Route": "index.yjgk5tsrs7.html",
+      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-yjgk5tsrs7.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000096908615"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10318"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "yjgk5tsrs7"
+        },
+        {
+          "Name": "label",
+          "Value": "index.html"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E="
+        }
+      ]
+    },
+    {
+      "Route": "index.yjgk5tsrs7.html",
+      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "46280"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/html"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -156,7 +293,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "akd22egpgs"
+          "Value": "yjgk5tsrs7"
         },
         {
           "Name": "label",
@@ -164,13 +301,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE="
+          "Value": "sha256-MjbuiXngUuavsyGo6+JTC6B4kKQ+pJUIpB9EyhYeO8E="
         }
       ]
     },
     {
-      "Route": "index.akd22egpgs.html.gz",
-      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-akd22egpgs.gz",
+      "Route": "index.yjgk5tsrs7.html.gz",
+      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-yjgk5tsrs7.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -179,7 +316,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7057"
+          "Value": "10318"
         },
         {
           "Name": "Content-Type",
@@ -187,11 +324,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0=\""
+          "Value": "\"/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
+          "Value": "Wed, 20 Aug 2025 12:52:27 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -209,7 +346,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "akd22egpgs"
+          "Value": "yjgk5tsrs7"
         },
         {
           "Name": "label",
@@ -217,144 +354,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0="
-        }
-      ]
-    },
-    {
-      "Route": "index.html",
-      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-akd22egpgs.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000141683196"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "7057"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/html"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE="
-        }
-      ]
-    },
-    {
-      "Route": "index.html",
-      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "33027"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/html"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-1tSwg4IhZoykRf4fInHqym9kH3B0bcnR2KtZJGxH0wE="
-        }
-      ]
-    },
-    {
-      "Route": "index.html.gz",
-      "AssetFile": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\obj\\Debug\\net9.0\\compressed\\w5uborj5bg-akd22egpgs.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "7057"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/html"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Mon, 18 Aug 2025 13:03:14 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-kURozdY9ChD3uTHNJtonsEicYOKlKjyQHL7Xby6fPE0="
+          "Value": "sha256-/yG+MzaENm8F9PxV+ZL3We9O2V9u4jPeUpBKX5YqGs8="
         }
       ]
     }
