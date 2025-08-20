@@ -5,6 +5,22 @@
       "PackagePath": "staticwebassets\\app.js"
     },
     {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\app-shell.html",
+      "PackagePath": "staticwebassets\\fragments\\app-shell.html"
+    },
+    {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\footer-toasts.html",
+      "PackagePath": "staticwebassets\\fragments\\footer-toasts.html"
+    },
+    {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\landing.html",
+      "PackagePath": "staticwebassets\\fragments\\landing.html"
+    },
+    {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\modals.html",
+      "PackagePath": "staticwebassets\\fragments\\modals.html"
+    },
+    {
       "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\index.html",
       "PackagePath": "staticwebassets\\index.html"
     },

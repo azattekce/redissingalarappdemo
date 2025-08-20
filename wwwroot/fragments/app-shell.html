@@ -1,0 +1,61 @@
+  <!-- App Shell (hidden until login) -->
+  <div id="appShell" style="display:none;">
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="m-0">Joker-ChatApp</h1>
+        <div class="d-flex align-items-center gap-2">
+          <div id="welcomeUser" class="text-muted me-2"></div>
+          <button id="btnShowRegister" class="btn btn-sm btn-outline-primary">Kayıt Ol</button>
+          <button id="btnShowLogin" class="btn btn-sm btn-primary">Giriş Yap</button>
+          <button id="btnLogout" class="btn btn-sm btn-outline-danger" style="display:none;">Çıkış</button>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+        <!-- Kullanıcı & Arkadaşlar -->
+        <div class="card mb-3">
+          <div class="card-header">Ben</div>
+          <div class="card-body" id="meBox">Giriş yapılmadı</div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">Kullanıcılar</div>
+          <div class="card-body pt-2 pb-2">
+            <input id="usersSearch" class="form-control form-control-sm" placeholder="Ara (isim veya e-posta)" />
+          </div>
+          <ul id="usersList" class="list-group users-scroll"></ul>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">Arkadaşlık İstekleri</div>
+          <div class="card-body">
+            <h6>Gelen</h6>
+            <ul id="incomingList" class="list-group mb-2"></ul>
+            <h6>Giden</h6>
+            <ul id="outgoingList" class="list-group"></ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Arkadaşlar</div>
+          <ul id="friendsList" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <!-- Sohbet -->
+        <div id="chatCard" class="card vh-80 d-flex">
+          <div class="card-header" id="chatHeader">Özel Sohbet</div>
+          <div class="card-body scroll" id="chatMessages"></div>
+          <div class="card-footer">
+            <div class="input-group">
+              <input id="chatInput" class="form-control" placeholder="Mesaj yazın" />
+              <button id="btnSend" class="btn btn-primary" type="button">Gönder</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
