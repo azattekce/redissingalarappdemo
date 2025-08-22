@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,11 +74,17 @@ app.UseAuthorization();
 app.MapHub<ChatHub>("/chat");
 
 // Minimal API: Auth
-app.MapPost("/api/auth/register", async (UserManager<ApplicationUser> userManager, RegisterRequest req) =>
+app.MapPost("/api/auth/register", async (UserManager<ApplicationUser> userManager, RegisterRequest req, IHubContext<ChatHub> hub) =>
 {
 	var user = new ApplicationUser { UserName = req.email, Email = req.email, DisplayName = req.displayName };
 	var result = await userManager.CreateAsync(user, req.password);
-	return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
+	if (result.Succeeded)
+	{
+		// Tüm bağlı kullanıcılara yeni üye bildirimi (sayfa yenilemeden liste güncellensin)
+		await hub.Clients.All.SendAsync("UserRegistered", new { user.Id, user.Email, user.DisplayName });
+		return Results.Ok();
+	}
+	return Results.BadRequest(result.Errors);
 });
 
 app.MapPost("/api/auth/login", async (SignInManager<ApplicationUser> signInManager, LoginRequest req) =>
@@ -160,7 +167,7 @@ app.MapGet("/api/friends/requests", async (AppDbContext db, UserManager<Applicat
 	return Results.Ok(new { incoming = pendingIncoming, outgoing = pendingOutgoing });
 }).RequireAuthorization();
 
-app.MapPost("/api/friends/request", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, FriendRequestCreate req) =>
+app.MapPost("/api/friends/request", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, IHubContext<ChatHub> hub, FriendRequestCreate req) =>
 {
 	var me = await userManager.GetUserAsync(accessor.HttpContext!.User);
 	if (me == null) return Results.Unauthorized();
@@ -169,10 +176,13 @@ app.MapPost("/api/friends/request", async (AppDbContext db, UserManager<Applicat
 	if (exists) return Results.BadRequest("Zaten bekleyen istek var.");
 	db.FriendRequests.Add(new FriendRequest { FromUserId = me.Id, ToUserId = req.toUserId });
 	await db.SaveChangesAsync();
+	// Hedef kullanıcıya gerçek zamanlı bildirim, gönderen tarafa da outbound güncellemesi
+	await hub.Clients.User(req.toUserId).SendAsync("FriendRequestIncoming", me.Id);
+	await hub.Clients.User(me.Id).SendAsync("FriendRequestOutgoing", req.toUserId);
 	return Results.Ok();
 }).RequireAuthorization();
 
-app.MapPost("/api/friends/respond", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, FriendRespondRequest req) =>
+app.MapPost("/api/friends/respond", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, IHubContext<ChatHub> hub, FriendRespondRequest req) =>
 {
 	var me = await userManager.GetUserAsync(accessor.HttpContext!.User);
 	if (me == null) return Results.Unauthorized();
@@ -180,6 +190,17 @@ app.MapPost("/api/friends/respond", async (AppDbContext db, UserManager<Applicat
 	if (fr == null || fr.ToUserId != me.Id) return Results.NotFound();
 	fr.Status = req.accept ? FriendRequestStatus.Accepted : FriendRequestStatus.Rejected;
 	await db.SaveChangesAsync();
+	// Her iki tarafa da gerçek zamanlı güncelleme
+	if (req.accept)
+	{
+		await hub.Clients.User(fr.FromUserId).SendAsync("FriendRequestAccepted", fr.ToUserId);
+		await hub.Clients.User(fr.ToUserId).SendAsync("FriendRequestAccepted", fr.FromUserId);
+	}
+	else
+	{
+		await hub.Clients.User(fr.FromUserId).SendAsync("FriendRequestRejected", fr.ToUserId);
+		await hub.Clients.User(fr.ToUserId).SendAsync("FriendRequestRejected", fr.FromUserId);
+	}
 	return Results.Ok();
 }).RequireAuthorization();
 
@@ -281,6 +302,9 @@ app.MapPost("/api/friends/unblock", async (AppDbContext db, UserManager<Applicat
 	return Results.Ok();
 }).RequireAuthorization();
 
+#region Friend Management
+
+
 // Remove friend (unfriend)
 app.MapPost("/api/friends/remove", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, IdRequest body) =>
 {
@@ -291,6 +315,7 @@ app.MapPost("/api/friends/remove", async (AppDbContext db, UserManager<Applicati
 	await db.SaveChangesAsync();
 	return Results.Ok();
 }).RequireAuthorization();
+#endregion
 
 // Messages: list conversation (excluding messages deleted by caller)
 app.MapGet("/api/messages/{otherId}", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, string otherId) =>

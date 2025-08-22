@@ -89,6 +89,34 @@ connection.on('ReceivePrivateMessage', async (payload) => {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
+// ---- Realtime: Friends and users list updates ----
+connection.on('UserRegistered', async (user) => {
+  // Yeni üye geldi: kullanıcılar listesini tazele ve bilgilendir
+  try { await refreshUsers(); } catch {}
+  showToast(`Yeni üye: ${user.displayName || user.email}`, 'info');
+});
+connection.on('FriendRequestIncoming', async (fromUserId) => {
+  // Size yeni istek: istekler bölümünü tazele
+  try { await refreshRequests(); } catch {}
+  const name = await getUserName(fromUserId);
+  showToast(`${name} sana arkadaşlık isteği gönderdi.`, 'info');
+});
+connection.on('FriendRequestOutgoing', async (toUserId) => {
+  // Gönderdiğiniz istek: outgoing list yenile
+  try { await refreshRequests(); } catch {}
+});
+connection.on('FriendRequestAccepted', async (otherUserId) => {
+  // Arkadaşlık kabul edildi: listeleri güncelle
+  try { await Promise.all([refreshFriends(), refreshUsers(), refreshRequests()]); } catch {}
+  const name = await getUserName(otherUserId);
+  showToast(`${name} ile artık arkadaşsınız.`, 'success');
+});
+connection.on('FriendRequestRejected', async (otherUserId) => {
+  try { await refreshRequests(); } catch {}
+  const name = await getUserName(otherUserId);
+  showToast(`${name} isteğinizi reddetti.`, 'warning');
+});
+
 connection.on('RtcOffer', async (fromUserId, offerJson) => {
   try {
     const offer = JSON.parse(offerJson);
