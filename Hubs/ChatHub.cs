@@ -61,7 +61,7 @@ namespace RedisChatApp.Hubs
                 if (!friends)
                     throw new HubException("Önce arkadaş olunuz.");
 
-                // Persist message
+                // Persist message (text)
                 _db.ChatMessages.Add(new ChatMessage
                 {
                     FromUserId = fromUserId,
@@ -77,6 +77,61 @@ namespace RedisChatApp.Hubs
             catch (RedisConnectionException ex)
             {
                 _logger.LogError(ex, "Redis publish (private) sırasında bağlantı hatası");
+                throw;
+            }
+        }
+
+        // Attachment: base64 image data (small), content format: data:image/...;base64,....
+        public async Task SendPrivateAttachment(string toUserId, string base64Data)
+        {
+            try
+            {
+                var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+                if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                    throw new HubException("Geçersiz kullanıcı.");
+                var blocked = _db.FriendBlocks.Any(b =>
+                    (b.BlockerUserId == fromUserId && b.BlockedUserId == toUserId) ||
+                    (b.BlockerUserId == toUserId && b.BlockedUserId == fromUserId));
+                if (blocked) throw new HubException("Mesaj gönderilemez: kullanıcı engellendi.");
+                if (!AreFriends(fromUserId, toUserId)) throw new HubException("Önce arkadaş olunuz.");
+
+                var content = $"[img]{base64Data}"; // mark as image for client rendering
+                _db.ChatMessages.Add(new ChatMessage { FromUserId = fromUserId, ToUserId = toUserId, Content = content });
+                await _db.SaveChangesAsync();
+
+                var payload = $"{fromUserId}:{content}";
+                var pub = _redis.GetSubscriber();
+                await pub.PublishAsync(RedisChannel.Literal($"chat:{toUserId}"), payload);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogError(ex, "Redis publish (attachment) sırasında bağlantı hatası");
+                throw;
+            }
+        }
+
+        // Location share: lat,lon numeric. Content will be [loc]lat,lon
+        public async Task SendPrivateLocation(string toUserId, double latitude, double longitude)
+        {
+            try
+            {
+                var fromUserId = Context.UserIdentifier ?? Context.User?.Identity?.Name ?? "";
+                if (string.IsNullOrWhiteSpace(fromUserId) || string.IsNullOrWhiteSpace(toUserId))
+                    throw new HubException("Geçersiz kullanıcı.");
+                if (IsBlockedEitherWay(fromUserId, toUserId)) throw new HubException("Mesaj gönderilemez: kullanıcı engellendi.");
+                if (!AreFriends(fromUserId, toUserId)) throw new HubException("Önce arkadaş olunuz.");
+
+                var content = $"[loc]{latitude},{longitude}";
+                _db.ChatMessages.Add(new ChatMessage { FromUserId = fromUserId, ToUserId = toUserId, Content = content });
+                await _db.SaveChangesAsync();
+
+                var payload = $"{fromUserId}:{content}";
+                var pub = _redis.GetSubscriber();
+                await pub.PublishAsync(RedisChannel.Literal($"chat:{toUserId}"), payload);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogError(ex, "Redis publish (location) sırasında bağlantı hatası");
                 throw;
             }
         }

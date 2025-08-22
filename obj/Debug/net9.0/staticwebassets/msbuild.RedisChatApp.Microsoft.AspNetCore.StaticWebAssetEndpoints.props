@@ -1,28 +1,28 @@
 ﻿<Project>
   <ItemGroup>
-    <StaticWebAssetEndpoint Include="_content/RedisChatApp/app.dj76lzwklx.js">
-      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\app.js'))</AssetFile>
-      <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"dj76lzwklx"},{"Name":"integrity","Value":"sha256-qQxrsfNfdkdWyERVMeKx6m1xkxDWoBi3FaN\u002BM7X0rZA="},{"Name":"label","Value":"_content/RedisChatApp/app.js"}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"32672"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022qQxrsfNfdkdWyERVMeKx6m1xkxDWoBi3FaN\u002BM7X0rZA=\u0022"},{"Name":"Last-Modified","Value":"Wed, 20 Aug 2025 20:07:15 GMT"}]]]></ResponseHeaders>
-    </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/RedisChatApp/app.js">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\app.js'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-qQxrsfNfdkdWyERVMeKx6m1xkxDWoBi3FaN\u002BM7X0rZA="}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"32672"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022qQxrsfNfdkdWyERVMeKx6m1xkxDWoBi3FaN\u002BM7X0rZA=\u0022"},{"Name":"Last-Modified","Value":"Wed, 20 Aug 2025 20:07:15 GMT"}]]]></ResponseHeaders>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-k8kvNDh/nFxDJUR8OfZC9aYs1pp0WNoufq/iwVQAREU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"35930"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022k8kvNDh/nFxDJUR8OfZC9aYs1pp0WNoufq/iwVQAREU=\u0022"},{"Name":"Last-Modified","Value":"Fri, 22 Aug 2025 08:16:09 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
-    <StaticWebAssetEndpoint Include="_content/RedisChatApp/fragments/app-shell.1qtxtp9nhc.html">
+    <StaticWebAssetEndpoint Include="_content/RedisChatApp/app.rib5cdqmdc.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\app.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"rib5cdqmdc"},{"Name":"integrity","Value":"sha256-k8kvNDh/nFxDJUR8OfZC9aYs1pp0WNoufq/iwVQAREU="},{"Name":"label","Value":"_content/RedisChatApp/app.js"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"35930"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022k8kvNDh/nFxDJUR8OfZC9aYs1pp0WNoufq/iwVQAREU=\u0022"},{"Name":"Last-Modified","Value":"Fri, 22 Aug 2025 08:16:09 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/RedisChatApp/fragments/app-shell.7x59v9d7w6.html">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\app-shell.html'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"1qtxtp9nhc"},{"Name":"integrity","Value":"sha256-uaWJfeO2nvEqhNequkCuNSmbEGJpLUziEd6TCb6BOFA="},{"Name":"label","Value":"_content/RedisChatApp/fragments/app-shell.html"}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"2465"},{"Name":"Content-Type","Value":"text/html"},{"Name":"ETag","Value":"\u0022uaWJfeO2nvEqhNequkCuNSmbEGJpLUziEd6TCb6BOFA=\u0022"},{"Name":"Last-Modified","Value":"Wed, 20 Aug 2025 19:54:06 GMT"}]]]></ResponseHeaders>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"7x59v9d7w6"},{"Name":"integrity","Value":"sha256-xaa/umBE0duTrgB5LCZqcaSRQST1BC6dDFuDP/9v36A="},{"Name":"label","Value":"_content/RedisChatApp/fragments/app-shell.html"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"2849"},{"Name":"Content-Type","Value":"text/html"},{"Name":"ETag","Value":"\u0022xaa/umBE0duTrgB5LCZqcaSRQST1BC6dDFuDP/9v36A=\u0022"},{"Name":"Last-Modified","Value":"Fri, 22 Aug 2025 08:14:37 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/RedisChatApp/fragments/app-shell.html">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\app-shell.html'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-uaWJfeO2nvEqhNequkCuNSmbEGJpLUziEd6TCb6BOFA="}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"2465"},{"Name":"Content-Type","Value":"text/html"},{"Name":"ETag","Value":"\u0022uaWJfeO2nvEqhNequkCuNSmbEGJpLUziEd6TCb6BOFA=\u0022"},{"Name":"Last-Modified","Value":"Wed, 20 Aug 2025 19:54:06 GMT"}]]]></ResponseHeaders>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-xaa/umBE0duTrgB5LCZqcaSRQST1BC6dDFuDP/9v36A="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"2849"},{"Name":"Content-Type","Value":"text/html"},{"Name":"ETag","Value":"\u0022xaa/umBE0duTrgB5LCZqcaSRQST1BC6dDFuDP/9v36A=\u0022"},{"Name":"Last-Modified","Value":"Fri, 22 Aug 2025 08:14:37 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/RedisChatApp/fragments/footer-toasts.dykdx41at3.html">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\footer-toasts.html'))</AssetFile>

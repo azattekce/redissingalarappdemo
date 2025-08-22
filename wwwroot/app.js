@@ -151,9 +151,28 @@ function renderMessageBubble(m, mine, nameOverride) {
   const nameEl = document.createElement('div');
   nameEl.className = `small ${mine ? 'text-white-50' : 'text-muted'}`;
   nameEl.textContent = senderName || '';
-  const textEl = document.createElement('div');
-  textEl.textContent = content;
-  bubble.appendChild(nameEl); bubble.appendChild(textEl);
+  const bodyEl = document.createElement('div');
+  if (content.startsWith('[img]')) {
+    const img = document.createElement('img');
+    img.src = content.substring(5);
+    img.alt = 'resim';
+    img.style.maxWidth = '260px';
+    img.style.borderRadius = '6px';
+    img.style.display = 'block';
+    bubble.appendChild(nameEl); bubble.appendChild(img);
+  } else if (content.startsWith('[loc]')) {
+    const coords = content.substring(5);
+    const [lat, lon] = coords.split(',');
+    const a = document.createElement('a');
+    a.href = `https://www.google.com/maps?q=${lat},${lon}`;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = `Konum: ${Number(lat).toFixed(5)}, ${Number(lon).toFixed(5)} (Haritada aç)`;
+    bubble.appendChild(nameEl); bubble.appendChild(a);
+  } else {
+    bodyEl.textContent = content;
+    bubble.appendChild(nameEl); bubble.appendChild(bodyEl);
+  }
 
   if (mine) { wrap.appendChild(bubble); wrap.appendChild(img); }
   else { wrap.appendChild(img); wrap.appendChild(bubble); }
@@ -564,6 +583,63 @@ document.getElementById('btnSend').onclick = async () => {
     input.value = '';
   } catch (err) { console.error(err); }
 };
+
+// Enter to send
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('btnSend').click();
+  }
+});
+
+// Image attach
+const btnAttach = document.getElementById('btnAttach');
+const fileImage = document.getElementById('fileImage');
+if (btnAttach && fileImage) {
+  btnAttach.onclick = () => fileImage.click();
+  fileImage.onchange = async () => {
+    if (!fileImage.files || fileImage.files.length === 0 || !activeFriendId) return;
+    const file = fileImage.files[0];
+    if (!file.type.startsWith('image/')) { showToast('Lütfen bir resim seçin.', 'warning'); return; }
+    // 1MB sınırı (örnek)
+    if (file.size > 1024 * 1024) { showToast('Resim 1MB üzerinde, lütfen daha küçük yükleyin.', 'warning'); return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result;
+      try {
+        await connection.invoke('SendPrivateAttachment', activeFriendId, dataUrl);
+        chatMessages.appendChild(renderMessageBubble({ id: 0, content: `[img]${dataUrl}`, fromUserId: me.id }, true));
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } catch (e) { console.error(e); showToast('Resim gönderilemedi.', 'error'); }
+      finally { fileImage.value = ''; }
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+// Share location
+const btnShareLocation = document.getElementById('btnShareLocation');
+if (btnShareLocation) {
+  btnShareLocation.onclick = async () => {
+    if (!activeFriendId) return;
+    if (!('geolocation' in navigator)) { showToast('Tarayıcı konum desteklemiyor.', 'warning'); return; }
+    btnShareLocation.disabled = true;
+    try {
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+      }).then(async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        await connection.invoke('SendPrivateLocation', activeFriendId, latitude, longitude);
+        chatMessages.appendChild(renderMessageBubble({ id: 0, content: `[loc]${latitude},${longitude}`, fromUserId: me.id }, true));
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+    } catch (e) {
+      console.error(e); showToast('Konum alınamadı.', 'error');
+    } finally {
+      btnShareLocation.disabled = false;
+    }
+  };
+}
 
 async function openVideoModal() {
   const modalEl = document.getElementById('videoCallModal');
