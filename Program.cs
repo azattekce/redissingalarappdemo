@@ -126,17 +126,31 @@ app.MapGet("/api/auth/me", async (UserManager<ApplicationUser> userManager, IHtt
 }).RequireAuthorization();
 
 // Minimal API: Users & Friends
-app.MapGet("/api/users", (UserManager<ApplicationUser> userManager, AppDbContext db) =>
+app.MapGet("/api/users", async (UserManager<ApplicationUser> userManager, AppDbContext db, IConnectionMultiplexer redis) =>
 {
 	var users = userManager.Users.Select(u => new { u.Id, u.Email, u.DisplayName }).ToList();
 	var ids = users.Select(u => u.Id).ToList();
 	var avatars = db.UserProfiles.Where(p => ids.Contains(p.UserId))
 		.ToDictionary(p => p.UserId, p => p.AvatarUrl);
-	var result = users.Select(u => new { u.Id, u.Email, u.DisplayName, AvatarUrl = avatars.ContainsKey(u.Id) ? avatars[u.Id] : null });
+	
+	// Check online status from Redis
+	var redisDb = redis.GetDatabase();
+	var onlineStatus = new Dictionary<string, bool>();
+	foreach (var userId in ids)
+	{
+		var isOnline = await redisDb.KeyExistsAsync($"user:online:{userId}");
+		onlineStatus[userId] = isOnline;
+	}
+	
+	var result = users.Select(u => new { 
+		u.Id, u.Email, u.DisplayName, 
+		AvatarUrl = avatars.ContainsKey(u.Id) ? avatars[u.Id] : null,
+		IsOnline = onlineStatus.ContainsKey(u.Id) && onlineStatus[u.Id]
+	});
 	return Results.Ok(result);
 }).RequireAuthorization();
 
-app.MapGet("/api/friends", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor) =>
+app.MapGet("/api/friends", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor, IConnectionMultiplexer redis) =>
 {
 	var me = await userManager.GetUserAsync(accessor.HttpContext!.User);
 	if (me == null) return Results.Unauthorized();
@@ -148,9 +162,22 @@ app.MapGet("/api/friends", async (AppDbContext db, UserManager<ApplicationUser> 
 		.Where(u => friendIds.Contains(u.Id))
 		.Select(u => new { u.Id, u.Email, u.DisplayName })
 		.ToList();
+	
+	// Check online status for friends
+	var redisDb = redis.GetDatabase();
+	var onlineStatus = new Dictionary<string, bool>();
+	foreach (var friendId in friendIds)
+	{
+		var isOnline = await redisDb.KeyExistsAsync($"user:online:{friendId}");
+		onlineStatus[friendId] = isOnline;
+	}
 	var avatars = db.UserProfiles.Where(p => friendIds.Contains(p.UserId))
 		.ToDictionary(p => p.UserId, p => p.AvatarUrl);
-	var result = friends.Select(u => new { u.Id, u.Email, u.DisplayName, AvatarUrl = avatars.ContainsKey(u.Id) ? avatars[u.Id] : null });
+	var result = friends.Select(u => new { 
+		u.Id, u.Email, u.DisplayName, 
+		AvatarUrl = avatars.ContainsKey(u.Id) ? avatars[u.Id] : null,
+		IsOnline = onlineStatus.ContainsKey(u.Id) && onlineStatus[u.Id]
+	});
 	return Results.Ok(result);
 }).RequireAuthorization();
 

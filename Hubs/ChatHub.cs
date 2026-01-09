@@ -195,6 +195,64 @@ namespace RedisChatApp.Hubs
             await Clients.User(toUserId).SendAsync("RtcHangup", fromUserId);
         }
 
-    public override Task OnConnectedAsync() => base.OnConnectedAsync();
+        public override async Task OnConnectedAsync()
+        {
+            var userId = Context.UserIdentifier;
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                try
+                {
+                    var redis = _redis.GetDatabase();
+                    // Mark user as online in Redis with expiration
+                    await redis.StringSetAsync($"user:online:{userId}", "1", TimeSpan.FromMinutes(5));
+                    
+                    // Notify friends that this user is now online
+                    var friends = _db.FriendRequests
+                        .Where(f => (f.FromUserId == userId || f.ToUserId == userId) && f.Status == FriendRequestStatus.Accepted)
+                        .Select(f => f.FromUserId == userId ? f.ToUserId : f.FromUserId)
+                        .ToList();
+                    
+                    foreach (var friendId in friends)
+                    {
+                        await Clients.User(friendId).SendAsync("UserStatusChanged", userId, true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating online status for user {UserId}", userId);
+                }
+            }
+            await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            var userId = Context.UserIdentifier;
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                try
+                {
+                    var redis = _redis.GetDatabase();
+                    // Remove online status from Redis
+                    await redis.KeyDeleteAsync($"user:online:{userId}");
+                    
+                    // Notify friends that this user is now offline
+                    var friends = _db.FriendRequests
+                        .Where(f => (f.FromUserId == userId || f.ToUserId == userId) && f.Status == FriendRequestStatus.Accepted)
+                        .Select(f => f.FromUserId == userId ? f.ToUserId : f.FromUserId)
+                        .ToList();
+                    
+                    foreach (var friendId in friends)
+                    {
+                        await Clients.User(friendId).SendAsync("UserStatusChanged", userId, false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating offline status for user {UserId}", userId);
+                }
+            }
+            await base.OnDisconnectedAsync(exception);
+        }
     }
 }

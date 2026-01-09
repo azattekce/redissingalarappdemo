@@ -42,3 +42,21 @@
 
 /* When authenticated, force-hide landing regardless of inline state */
 body.authenticated #landingShell { display: none !important; }
+
+/* Online/offline status indicators */
+.status-indicator {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.status-indicator.online {
+  background-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+}
+.status-indicator.offline {
+  background-color: #6c757d;
+}

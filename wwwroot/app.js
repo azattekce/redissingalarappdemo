@@ -116,6 +116,10 @@ connection.on('FriendRequestRejected', async (otherUserId) => {
   const name = await getUserName(otherUserId);
   showToast(`${name} isteğinizi reddetti.`, 'warning');
 });
+connection.on('UserStatusChanged', async (userId, isOnline) => {
+  // Arkadaş online/offline oldu: sadece UI'da status indicator güncelle
+  updateUserStatusIndicator(userId, isOnline);
+});
 
 connection.on('RtcOffer', async (fromUserId, offerJson) => {
   try {
@@ -406,7 +410,12 @@ async function refreshUsers() {
       img.src = avatarUrl; img.onerror = ()=>{ img.src = defaultAvatarSvg(); };
       avatarCache.set(u.id, avatarUrl);
       const name = document.createElement('span'); name.textContent = `${u.displayName || u.email}`;
-      left.appendChild(img); left.appendChild(name);
+      // Online status indicator
+      const statusDot = document.createElement('span');
+      statusDot.className = `status-indicator ${u.isOnline ? 'online' : 'offline'}`;
+      statusDot.setAttribute('data-user-id', u.id);
+      statusDot.title = u.isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+      left.appendChild(img); left.appendChild(name); left.appendChild(statusDot);
       if (friendSet.has(u.id)) {
         const badge = document.createElement('span');
         badge.className = 'badge text-bg-secondary';
@@ -451,7 +460,12 @@ async function refreshFriends() {
     img.src = f.avatarUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>";
     img.onerror = ()=>{ img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%25' height='100%25' fill='%23cccccc'/><circle cx='32' cy='24' r='12' fill='%23ffffff'/><rect x='16' y='40' width='32' height='16' rx='8' fill='%23ffffff'/></svg>"; };
     const name = document.createElement('span'); name.className = 'friend-name'; name.textContent = `${f.displayName || f.email}`;
-    left.appendChild(img); left.appendChild(name);
+    // Online status indicator
+    const statusDot = document.createElement('span');
+    statusDot.className = `status-indicator ${f.isOnline ? 'online' : 'offline'}`;
+    statusDot.setAttribute('data-user-id', f.id);
+    statusDot.title = f.isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
+    left.appendChild(img); left.appendChild(name); left.appendChild(statusDot);
     left.style.cursor = 'pointer';
     left.onclick = () => openFriendProfile(f.id);
     const wrap = document.createElement('div'); wrap.className = 'friend-actions d-flex align-items-center gap-1 flex-shrink-0';
@@ -482,6 +496,16 @@ async function refreshFriends() {
     li.appendChild(left);
     li.appendChild(wrap);
     ul.appendChild(li);
+  });
+}
+
+// Update online status indicator for a specific user
+function updateUserStatusIndicator(userId, isOnline) {
+  const indicators = document.querySelectorAll(`[data-user-id="${userId}"] .status-indicator, .status-indicator[data-user-id="${userId}"]`);
+  indicators.forEach(indicator => {
+    indicator.classList.toggle('online', isOnline);
+    indicator.classList.toggle('offline', !isOnline);
+    indicator.title = isOnline ? 'Çevrimiçi' : 'Çevrimdışı';
   });
 }
 
