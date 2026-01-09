@@ -1,6 +1,78 @@
 // Extracted client script from index.html for separation of concerns.
 // Note: This mirrors the previous inline script one-to-one.
 
+// Theme Management System
+const ThemeManager = {
+  STORAGE_KEY: 'joker-chat-theme',
+  
+  getStoredTheme() {
+    return localStorage.getItem(this.STORAGE_KEY) || 'auto';
+  },
+  
+  setStoredTheme(theme) {
+    localStorage.setItem(this.STORAGE_KEY, theme);
+  },
+  
+  getPreferredTheme() {
+    const stored = this.getStoredTheme();
+    if (stored !== 'auto') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  },
+  
+  setTheme(theme) {
+    if (theme === 'auto') {
+      document.documentElement.setAttribute('data-bs-theme', this.getPreferredTheme());
+    } else {
+      document.documentElement.setAttribute('data-bs-theme', theme);
+    }
+    this.setStoredTheme(theme);
+    this.updateThemeUI(theme);
+  },
+  
+  updateThemeUI(theme) {
+    // Update all theme dropdown buttons
+    const buttons = document.querySelectorAll('#themeDropdown, #themeDropdownLanding');
+    const icons = {
+      light: 'bi-sun',
+      dark: 'bi-moon', 
+      auto: 'bi-circle-half'
+    };
+    
+    buttons.forEach(btn => {
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.className = `bi ${icons[theme] || 'bi-palette2'}`;
+      }
+    });
+    
+    // Update active states in dropdowns
+    document.querySelectorAll('.theme-option').forEach(option => {
+      option.classList.toggle('active', option.dataset.theme === theme);
+    });
+  },
+  
+  init() {
+    // Set initial theme
+    this.setTheme(this.getStoredTheme());
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (this.getStoredTheme() === 'auto') {
+        this.setTheme('auto');
+      }
+    });
+    
+    // Event delegation for theme options
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('theme-option')) {
+        e.preventDefault();
+        const theme = e.target.dataset.theme;
+        this.setTheme(theme);
+      }
+    });
+  }
+};
+
 let me = null;
 let activeFriendId = null;
 const chatMessages = document.getElementById('chatMessages');
@@ -28,6 +100,10 @@ function showAppShellUI() {
   if (btnLogout) btnLogout.style.display = '';
   try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch { window.scrollTo(0,0); }
   document.body.classList.add('authenticated');
+  // Update theme UI when switching to app shell
+  if (typeof ThemeManager !== 'undefined') {
+    ThemeManager.updateThemeUI(ThemeManager.getStoredTheme());
+  }
 }
 
 function showLandingShellUI() {
@@ -60,6 +136,10 @@ function showLandingShellUI() {
   if (btnLogin) btnLogin.style.display = '';
   if (btnLogout) btnLogout.style.display = 'none';
   document.body.classList.remove('authenticated');
+  // Update theme UI when switching to landing
+  if (typeof ThemeManager !== 'undefined') {
+    ThemeManager.updateThemeUI(ThemeManager.getStoredTheme());
+  }
 }
 
 // --- WebRTC state ---
@@ -177,11 +257,11 @@ function renderMessageBubble(m, mine, nameOverride) {
   if (!mine && !avatarCache.has(fromId)) ensureAvatarLoaded(fromId, img);
 
   const bubble = document.createElement('div');
-  bubble.className = `msg-bubble ${mine ? 'bg-primary text-white' : 'bg-light'}`;
+  bubble.className = `msg-bubble ${mine ? 'message-bubble-sent' : 'message-bubble-received'}`;
   const senderName = nameOverride ?? (mine ? (me?.displayName || me?.email || 'Ben') : (userCache.get(fromId) || ''));
   const content = m.content || m.Content || '';
   const nameEl = document.createElement('div');
-  nameEl.className = `small ${mine ? 'text-white-50' : 'text-muted'}`;
+  nameEl.className = `small ${mine ? 'opacity-75' : 'text-muted'}`;
   nameEl.textContent = senderName || '';
   const bodyEl = document.createElement('div');
   if (content.startsWith('[img]')) {
@@ -1003,4 +1083,8 @@ async function endCall(notifyPeer) {
   }
 }
 
+// Initialize systems
 refreshMe();
+
+// Initialize theme system
+ThemeManager.init();

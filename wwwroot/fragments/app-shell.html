@@ -5,6 +5,26 @@
         <h1 class="m-0">Joker-ChatApp</h1>
         <div class="d-flex align-items-center gap-2">
           <div id="welcomeUser" class="text-muted me-2"></div>
+          
+          <!-- Tema Seçici -->
+          <div class="dropdown me-2">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Tema Seç">
+              <i class="bi bi-palette2"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown">
+              <li><h6 class="dropdown-header">Tema Seçin</h6></li>
+              <li><a class="dropdown-item theme-option" href="#" data-theme="light">
+                <i class="bi bi-sun"></i> Açık Tema
+              </a></li>
+              <li><a class="dropdown-item theme-option" href="#" data-theme="dark">
+                <i class="bi bi-moon"></i> Koyu Tema
+              </a></li>
+              <li><a class="dropdown-item theme-option" href="#" data-theme="auto">
+                <i class="bi bi-circle-half"></i> Sistem Teması
+              </a></li>
+            </ul>
+          </div>
+          
           <button id="btnShowRegister" class="btn btn-sm btn-outline-primary">Kayıt Ol</button>
           <button id="btnShowLogin" class="btn btn-sm btn-primary">Giriş Yap</button>
           <button id="btnLogout" class="btn btn-sm btn-outline-danger" style="display:none;">Çıkış</button>

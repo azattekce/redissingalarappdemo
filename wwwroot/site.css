@@ -43,6 +43,53 @@
 /* When authenticated, force-hide landing regardless of inline state */
 body.authenticated #landingShell { display: none !important; }
 
+/* Theme System - Custom Properties */
+:root {
+  --chat-bg: #f8f9fa;
+  --chat-bubble-sent: #007bff;
+  --chat-bubble-received: #e9ecef;
+  --landing-bg: #f0f2f5;
+  --card-bg: var(--bs-body-bg);
+}
+
+[data-bs-theme="dark"] {
+  --chat-bg: #212529;
+  --chat-bubble-sent: #0d6efd;
+  --chat-bubble-received: #495057;
+  --landing-bg: #1a1e21;
+  --card-bg: var(--bs-dark);
+}
+
+/* Landing page background */
+#landingShell {
+  background: var(--landing-bg) !important;
+}
+
+/* Chat messages styling */
+#chatMessages {
+  background: var(--chat-bg);
+}
+
+.message-bubble-sent {
+  background-color: var(--chat-bubble-sent);
+  color: white;
+}
+
+.message-bubble-received {
+  background-color: var(--chat-bubble-received);
+  color: var(--bs-body-color);
+}
+
+/* Theme dropdown styling */
+.theme-option.active {
+  background-color: var(--bs-primary);
+  color: var(--bs-primary-text-emphasis);
+}
+
+.theme-option.active i {
+  color: var(--bs-primary-text-emphasis);
+}
+
 /* Online/offline status indicators */
 .status-indicator {
   position: relative;
