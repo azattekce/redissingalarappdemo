@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RedisChatApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1fa834a8f19bfa8d06f99fbfe5e2803ba93af877")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de01c12462dca0096c7f2d21f64ef8c1ac690789")]
 [assembly: System.Reflection.AssemblyProductAttribute("RedisChatApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RedisChatApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

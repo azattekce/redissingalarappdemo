@@ -371,7 +371,14 @@ async function refreshMe() {
     me = await api('/api/auth/me');
     const p = await api('/api/profile');
     myAvatarUrl = p?.profile?.avatarUrl || defaultAvatarSvg();
-    document.getElementById('meBox').textContent = `${me.displayName || me.email} (${me.id})`;
+    document.getElementById('meBox').innerHTML = `
+      <div class="d-flex align-items-center gap-2">
+        <img src="${myAvatarUrl}" class="avatar-small" alt="avatar" onerror="this.src='${defaultAvatarSvg()}'" />
+        <div>
+          <div class="fw-bold">${me.displayName || me.email}</div>
+          <small class="text-muted">Çevrimiçi</small>
+        </div>
+      </div>`;
     document.getElementById('welcomeUser').innerHTML = `
       <div class="d-flex align-items-center gap-2">
         <span>Hoş geldin, <strong>${me.displayName || me.email}</strong></span>
@@ -602,13 +609,34 @@ function showConfirm(title, message, actionText, actionClass = 'btn-primary') {
 
 async function refreshRequests() {
   const { incoming, outgoing } = await api('/api/friends/requests');
+  
+  // Ensure users are cached for proper display
+  if (userCache.size === 0) {
+    try {
+      const users = await api('/api/users');
+      users.forEach(u => userCache.set(u.id, u.displayName || u.email));
+    } catch (e) {
+      console.warn('Could not load users for request display:', e);
+    }
+  }
+  
   const inc = document.getElementById('incomingList');
   const out = document.getElementById('outgoingList');
   inc.innerHTML = ''; out.innerHTML = '';
+  
   incoming.forEach(r => {
+    // Get sender info
+    const senderInfo = userCache.get(r.fromUserId) || 'Bilinmeyen kullanıcı';
+    
     const li = document.createElement('li');
     li.className = 'list-group-item d-flex justify-content-between align-items-center';
-    li.textContent = `İstek #${r.id} -> size`;
+    
+    const leftDiv = document.createElement('div');
+    leftDiv.innerHTML = `
+      <div class="fw-bold">${senderInfo}</div>
+      <small class="text-muted">Arkadaşlık isteği gönderdi</small>
+    `;
+    
     const div = document.createElement('div');
     const ac = document.createElement('button'); ac.className = 'btn btn-sm btn-success me-2'; ac.textContent = 'Kabul'; 
     ac.onclick = async ()=>{ 
@@ -648,14 +676,27 @@ async function refreshRequests() {
         showToast('İstek reddedilirken bir hata oluştu.', 'error');
       }
     };
-    div.appendChild(ac); div.appendChild(dc);
+    div.appendChild(ac); div.appendChild(rej);
+    li.appendChild(leftDiv);
     li.appendChild(div);
     inc.appendChild(li);
   });
+  
   outgoing.forEach(r => {
+    // Get recipient info
+    const recipientInfo = userCache.get(r.toUserId) || 'Bilinmeyen kullanıcı';
+    
     const li = document.createElement('li');
-    li.className = 'list-group-item';
-    li.textContent = `İstek #${r.id} -> gönderildi (bekliyor)`;
+    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+    
+    li.innerHTML = `
+      <div>
+        <div class="fw-bold">${recipientInfo}</div>
+        <small class="text-muted">İstek gönderildi • Yanıt bekleniyor</small>
+      </div>
+      <span class="badge bg-secondary">Bekliyor</span>
+    `;
+    
     out.appendChild(li);
   });
 }

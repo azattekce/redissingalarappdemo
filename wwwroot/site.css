@@ -60,3 +60,15 @@ body.authenticated #landingShell { display: none !important; }
 .status-indicator.offline {
   background-color: #6c757d;
 }
+
+/* Friend requests styling */
+.list-group-item .fw-bold {
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+.list-group-item .text-muted {
+  font-size: 0.8rem;
+}
+.list-group-item .badge {
+  font-size: 0.7rem;
+}
