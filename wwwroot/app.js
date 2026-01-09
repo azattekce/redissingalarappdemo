@@ -426,6 +426,14 @@ async function refreshUsers() {
         btn.className = 'btn btn-sm btn-outline-primary';
         btn.textContent = 'Arkadaşlık isteği';
         btn.onclick = async () => {
+          const confirmed = await showConfirm(
+            'Arkadaşlık İsteği',
+            `${u.displayName || u.email} adlı kişiye arkadaşlık isteği göndermek istediğinizden emin misiniz?`,
+            'Gönder',
+            'btn-primary'
+          );
+          if (!confirmed) return;
+          
           try {
             await api('/api/friends/request', { method: 'POST', body: JSON.stringify({ toUserId: u.id }) });
             btn.textContent = 'İstek gönderildi';
@@ -435,7 +443,7 @@ async function refreshUsers() {
             await refreshRequests();
           } catch (e) {
             console.error(e);
-            alert('İstek gönderilirken bir hata oluştu.');
+            showToast('İstek gönderilirken bir hata oluştu.', 'error');
           }
         };
         li.appendChild(left); li.appendChild(btn);
@@ -482,16 +490,50 @@ async function refreshFriends() {
     const blockBtn = document.createElement('button'); blockBtn.className = `icon-btn ${blocked ? 'secondary' : 'danger'}`; blockBtn.title = blocked ? 'Engeli Kaldır' : 'Engelle';
     blockBtn.innerHTML = '<i class="bi bi-slash-circle"></i>';
     blockBtn.onclick = async ()=>{
-      if (blocks.includes(f.id)) {
-        await api('/api/friends/unblock', { method:'POST', body: JSON.stringify({ userId: f.id }) });
-      } else {
-        await api('/api/friends/block', { method:'POST', body: JSON.stringify({ userId: f.id }) });
+      // Get fresh blocks status
+      const currentBlocks = await api('/api/friends/blocks');
+      const isBlocked = currentBlocks.includes(f.id);
+      const action = isBlocked ? 'engeli kaldırmak' : 'engellemek';
+      const confirmed = await showConfirm(
+        isBlocked ? 'Engeli Kaldır' : 'Engelle',
+        `${f.displayName || f.email} adlı kişiyi ${action} istediğinizden emin misiniz?`,
+        isBlocked ? 'Engeli Kaldır' : 'Engelle',
+        isBlocked ? 'btn-warning' : 'btn-danger'
+      );
+      if (!confirmed) return;
+      
+      try {
+        if (isBlocked) {
+          await api('/api/friends/unblock', { method:'POST', body: JSON.stringify({ userId: f.id }) });
+        } else {
+          await api('/api/friends/block', { method:'POST', body: JSON.stringify({ userId: f.id }) });
+        }
+        await refreshFriends();
+        showToast(isBlocked ? 'Engel kaldırıldı.' : 'Kullanıcı engellendi.', 'success');
+      } catch (e) {
+        console.error('Block/unblock error:', e);
+        showToast('İşlem sırasında bir hata oluştu.', 'error');
       }
-      await refreshFriends();
     };
     const removeBtn = document.createElement('button'); removeBtn.className = 'icon-btn dark'; removeBtn.title = 'Sil';
     removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
-    removeBtn.onclick = async ()=>{ await api('/api/friends/remove', { method:'POST', body: JSON.stringify({ userId: f.id }) }); await refreshFriends(); };
+    removeBtn.onclick = async ()=>{ 
+      const confirmed = await showConfirm(
+        'Arkadaşı Sil',
+        `${f.displayName || f.email} adlı kişiyi arkadaş listenizden silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
+        'Sil',
+        'btn-danger'
+      );
+      if (!confirmed) return;
+      
+      try {
+        await api('/api/friends/remove', { method:'POST', body: JSON.stringify({ userId: f.id }) }); 
+        await refreshFriends();
+        showToast('Arkadaş başarıyla silindi.', 'success');
+      } catch (e) {
+        showToast('Arkadaş silinirken bir hata oluştu.', 'error');
+      }
+    };
     wrap.appendChild(chatBtn); wrap.appendChild(profBtn); wrap.appendChild(videoBtn); wrap.appendChild(blockBtn); wrap.appendChild(removeBtn);
     li.appendChild(left);
     li.appendChild(wrap);
@@ -509,6 +551,55 @@ function updateUserStatusIndicator(userId, isOnline) {
   });
 }
 
+// Centralized confirmation utility
+function showConfirm(title, message, actionText, actionClass = 'btn-primary') {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    if (!modal) {
+      console.error('Confirmation modal not found!');
+      resolve(false);
+      return;
+    }
+    
+    const titleEl = document.getElementById('confirmModalTitle');
+    const messageEl = document.getElementById('confirmModalMessage');
+    const actionBtn = document.getElementById('confirmModalAction');
+    
+    if (!titleEl || !messageEl || !actionBtn) {
+      console.error('Modal elements not found!');
+      resolve(false);
+      return;
+    }
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    actionBtn.textContent = actionText;
+    actionBtn.className = `btn ${actionClass}`;
+    
+    // Remove existing event listeners
+    const newActionBtn = actionBtn.cloneNode(true);
+    actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+    
+    // Create modal instance
+    const modalInstance = new bootstrap.Modal(modal);
+    
+    // Add event listeners
+    newActionBtn.onclick = () => {
+      modalInstance.hide();
+      resolve(true);
+    };
+    
+    // Handle modal close events
+    const handleModalClose = () => {
+      resolve(false);
+      modal.removeEventListener('hidden.bs.modal', handleModalClose);
+    };
+    
+    modal.addEventListener('hidden.bs.modal', handleModalClose);
+    modalInstance.show();
+  });
+}
+
 async function refreshRequests() {
   const { incoming, outgoing } = await api('/api/friends/requests');
   const inc = document.getElementById('incomingList');
@@ -519,8 +610,44 @@ async function refreshRequests() {
     li.className = 'list-group-item d-flex justify-content-between align-items-center';
     li.textContent = `İstek #${r.id} -> size`;
     const div = document.createElement('div');
-    const ac = document.createElement('button'); ac.className = 'btn btn-sm btn-success me-2'; ac.textContent = 'Kabul'; ac.onclick = async ()=>{ await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: true }) }); await Promise.all([refreshFriends(), refreshRequests()]); };
-    const dc = document.createElement('button'); dc.className = 'btn btn-sm btn-outline-danger'; dc.textContent = 'Reddet'; dc.onclick = async ()=>{ await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: false }) }); await refreshRequests(); };
+    const ac = document.createElement('button'); ac.className = 'btn btn-sm btn-success me-2'; ac.textContent = 'Kabul'; 
+    ac.onclick = async ()=>{ 
+      const fromUser = userManager.users?.find(u => u.id === r.fromUserId) || { displayName: r.fromUserId };
+      const confirmed = await showConfirm(
+        'Arkadaşlık İsteğini Kabul Et',
+        `${fromUser.displayName || fromUser.email || 'Bu kullanıcının'} arkadaşlık isteğini kabul etmek istediğinizden emin misiniz?`,
+        'Kabul Et',
+        'btn-success'
+      );
+      if (!confirmed) return;
+      
+      try {
+        await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: true }) }); 
+        await Promise.all([refreshFriends(), refreshRequests()]); 
+        showToast('Arkadaşlık isteği kabul edildi.', 'success');
+      } catch (e) {
+        showToast('İstek kabul edilirken bir hata oluştu.', 'error');
+      }
+    };
+    const rej = document.createElement('button'); rej.className = 'btn btn-sm btn-outline-danger'; rej.textContent = 'Reddet';
+    rej.onclick = async ()=>{ 
+      const fromUser = userManager.users?.find(u => u.id === r.fromUserId) || { displayName: r.fromUserId };
+      const confirmed = await showConfirm(
+        'Arkadaşlık İsteğini Reddet',
+        `${fromUser.displayName || fromUser.email || 'Bu kullanıcının'} arkadaşlık isteğini reddetmek istediğinizden emin misiniz?`,
+        'Reddet',
+        'btn-danger'
+      );
+      if (!confirmed) return;
+      
+      try {
+        await api('/api/friends/respond', { method:'POST', body: JSON.stringify({ requestId: r.id, accept: false }) }); 
+        await refreshRequests(); 
+        showToast('Arkadaşlık isteği reddedildi.', 'info');
+      } catch (e) {
+        showToast('İstek reddedilirken bir hata oluştu.', 'error');
+      }
+    };
     div.appendChild(ac); div.appendChild(dc);
     li.appendChild(div);
     inc.appendChild(li);
