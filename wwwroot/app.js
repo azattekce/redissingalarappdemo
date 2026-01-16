@@ -62,11 +62,12 @@ const ThemeManager = {
       }
     });
     
-    // Event delegation for theme options
+    // Event delegation for theme options (use closest so clicks on inner elements are handled)
     document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('theme-option')) {
+      const opt = e.target.closest ? e.target.closest('.theme-option') : null;
+      if (opt) {
         e.preventDefault();
-        const theme = e.target.dataset.theme;
+        const theme = opt.dataset.theme;
         this.setTheme(theme);
       }
     });

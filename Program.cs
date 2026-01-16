@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +32,41 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 	})
 	.AddEntityFrameworkStores<AppDbContext>()
 	.AddDefaultTokenProviders();
+// Make cookie behavior explicit so browsers send the cookie for our SPA fetch requests
+builder.Services.ConfigureApplicationCookie(options =>
+{
+	// Keep defaults but ensure SameSite is Lax so in-page fetches and navigation include cookie
+	options.Cookie.HttpOnly = true;
+	options.Cookie.IsEssential = true;
+	options.Cookie.SameSite = SameSiteMode.Lax;
+	// In dev we may use http so avoid forcing Secure on cookie; rely on environment
+	options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+	// Shorten login path handling if needed
+	options.LoginPath = "/";
+	// For API or XHR requests, don't redirect to login page (return 401) — prevents SPA being navigated to login HTML
+	options.Events.OnRedirectToLogin = ctx =>
+	{
+		var req = ctx.Request;
+		if (req.Path.StartsWithSegments("/api") || req.Headers["Accept"].ToString().Contains("application/json") || req.Headers["X-Requested-With"].ToString().Equals("XMLHttpRequest", System.StringComparison.OrdinalIgnoreCase))
+		{
+			ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+			return System.Threading.Tasks.Task.CompletedTask;
+		}
+		ctx.Response.Redirect(ctx.RedirectUri);
+		return System.Threading.Tasks.Task.CompletedTask;
+	};
+	options.Events.OnRedirectToAccessDenied = ctx =>
+	{
+		var req = ctx.Request;
+		if (req.Path.StartsWithSegments("/api") || req.Headers["Accept"].ToString().Contains("application/json") || req.Headers["X-Requested-With"].ToString().Equals("XMLHttpRequest", System.StringComparison.OrdinalIgnoreCase))
+		{
+			ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+			return System.Threading.Tasks.Task.CompletedTask;
+		}
+		ctx.Response.Redirect(ctx.RedirectUri);
+		return System.Threading.Tasks.Task.CompletedTask;
+	};
+});
 builder.Services.AddHttpContextAccessor();
 
 // Data Protection key persistence (persist across container restarts)
@@ -67,6 +103,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
+// Ensure CookiePolicy middleware runs before authentication so browser policies are applied
+app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 

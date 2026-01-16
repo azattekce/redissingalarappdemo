@@ -12,8 +12,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>zhg8oaz006</Fingerprint>
-      <Integrity>eUqRr/u7jI60Tco5bUGYQfvU5P2dYf3Tft73vvd/aPc=</Integrity>
+      <Fingerprint>h6eotw5h83</Fingerprint>
+      <Integrity>N1Uhz5wWoAGrKcaPw9TvQ7/z6T/duN6zVL4e8TnSDUw=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\app.js'))</OriginalItemSpec>
@@ -30,8 +30,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>7x59v9d7w6</Fingerprint>
-      <Integrity>xaa/umBE0duTrgB5LCZqcaSRQST1BC6dDFuDP/9v36A=</Integrity>
+      <Fingerprint>x3k3vx8g84</Fingerprint>
+      <Integrity>c1SfoDqS46Pmx5g2xzUZPUotGcwwmn0G0RPO6pttu3I=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\app-shell.html'))</OriginalItemSpec>
@@ -66,8 +66,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>i7hg054qko</Fingerprint>
-      <Integrity>Hq8zL9MddRBBrABhNpFBePXksS7tGsuANbFIdhn3das=</Integrity>
+      <Fingerprint>g3g4b359oa</Fingerprint>
+      <Integrity>fJHYups2vF0cGJaBauRcpOuYPpsBPVIISt37qfph3/Q=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\landing.html'))</OriginalItemSpec>
@@ -120,8 +120,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>7tvqayux37</Fingerprint>
-      <Integrity>daq5nB2bLTC+t0iXJvp5nm+ywtlTbVU0a4NI1lEAs5g=</Integrity>
+      <Fingerprint>r36ydkae87</Fingerprint>
+      <Integrity>mY9TYhue0KCiq1e8+I0FxLFqSK6XixqFh7/MGZ2d3JM=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\site.css'))</OriginalItemSpec>
