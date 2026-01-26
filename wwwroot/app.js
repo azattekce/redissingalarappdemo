@@ -83,6 +83,10 @@ let myAvatarUrl = null;
 
 // --- UI toggle helpers ---
 function showAppShellUI() {
+  // Loading durumunu kaldır
+  const loadingDiv = document.getElementById('authLoading');
+  if (loadingDiv) loadingDiv.remove();
+  
   const landing = document.getElementById('landingShell');
   const app = document.getElementById('appShell');
   if (landing) {
@@ -108,6 +112,10 @@ function showAppShellUI() {
 }
 
 function showLandingShellUI() {
+  // Loading durumunu kaldır
+  const loadingDiv = document.getElementById('authLoading');
+  if (loadingDiv) loadingDiv.remove();
+  
   let landing = document.getElementById('landingShell');
   const app = document.getElementById('appShell');
   (async () => {
@@ -441,17 +449,49 @@ function showToast(message, type = 'info', delay = 3000) {
 }
 
 async function api(path, options) {
-  const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
-  if (!res.ok) throw new Error(await res.text());
-  if (res.headers.get('Content-Type')?.includes('application/json')) return res.json();
-  return null;
+  try {
+    const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
+    if (!res.ok) {
+      // 401 Unauthorized - Session süresi dolmuş veya auth gerekli
+      if (res.status === 401) {
+        console.warn('Session expired or unauthorized:', path);
+        // Sadece auth endpoint değilse kullanıcıyı logout yap
+        if (!path.startsWith('/api/auth/')) {
+          handleAuthExpired();
+        }
+      }
+      throw new Error(await res.text());
+    }
+    if (res.headers.get('Content-Type')?.includes('application/json')) return res.json();
+    return null;
+  } catch (error) {
+    console.error('API Error:', path, error);
+    throw error;
+  }
+}
+
+// Session süresi dolduğunda çağrılır
+function handleAuthExpired() {
+  if (me) {  // Sadece daha önce login olmuşsa
+    me = null;
+    activeFriendId = null;
+    chatMessages.innerHTML = '';
+    document.getElementById('meBox').textContent = 'Oturum süresi doldu. Lütfen tekrar giriş yapın.';
+    document.getElementById('welcomeUser').textContent = '';
+    localStorage.removeItem('lastChatUserId');
+    showLandingShellUI();
+    showToast('Oturum süresi doldu. Lütfen tekrar giriş yapın.', 'warning');
+  }
 }
 
 async function refreshMe() {
   try {
+    console.log('Checking authentication status...');
     me = await api('/api/auth/me');
     const p = await api('/api/profile');
     myAvatarUrl = p?.profile?.avatarUrl || defaultAvatarSvg();
+    
+    // Başarılı authentication - UI'ı güncelle
     document.getElementById('meBox').innerHTML = `
       <div class="d-flex align-items-center gap-2">
         <img src="${myAvatarUrl}" class="avatar-small" alt="avatar" onerror="this.src='${defaultAvatarSvg()}'" />
@@ -465,30 +505,37 @@ async function refreshMe() {
         <span>Hoş geldin, <strong>${me.displayName || me.email}</strong></span>
         <button class="btn btn-sm btn-outline-secondary" onclick="openMyProfile()">Bilgilerim</button>
       </div>`;
-  showAppShellUI();
+    
+    showAppShellUI();
+    console.log('Authentication successful, loading app data...');
+    
+    // Paralel olarak diğer verileri yükle  
     await Promise.all([refreshUsers(), refreshFriends(), refreshRequests()]);
     await startHub();
     await restoreLastChat();
-  } catch {
+    
+  } catch (error) {
+    console.log('Authentication failed:', error.message);
     me = null;
     document.getElementById('meBox').textContent = 'Giriş yapılmadı';
     document.getElementById('welcomeUser').textContent = '';
-  showLandingShellUI();
+    showLandingShellUI();
   }
 }
 
 async function refreshUsers() {
-  const [users, friends] = await Promise.all([
-    api('/api/users'),
-    api('/api/friends')
-  ]);
-  const friendSet = new Set((friends || []).map(f => f.id));
-  const ul = document.getElementById('usersList');
-  ul.innerHTML = '';
-  const term = (document.getElementById('usersSearch')?.value || '').trim().toLowerCase();
-  users.filter(u => u.id !== me.id)
-    .filter(u => !term || (u.displayName || u.email || '').toLowerCase().includes(term))
-    .forEach(u => {
+  try {
+    const [users, friends] = await Promise.all([
+      api('/api/users'),
+      api('/api/friends')
+    ]);
+    const friendSet = new Set((friends || []).map(f => f.id));
+    const ul = document.getElementById('usersList');
+    ul.innerHTML = '';
+    const term = (document.getElementById('usersSearch')?.value || '').trim().toLowerCase();
+    users.filter(u => u.id !== me.id)
+      .filter(u => !term || (u.displayName || u.email || '').toLowerCase().includes(term))
+      .forEach(u => {
       userCache.set(u.id, u.displayName || u.email);
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex align-items-center justify-content-between';
@@ -538,13 +585,20 @@ async function refreshUsers() {
       }
       ul.appendChild(li);
     });
+  } catch (error) {
+    console.error('Error refreshing users:', error);
+    if (error.message && !error.message.includes('401')) {
+      showToast('Kullanıcı listesi yüklenirken hata oluştu.', 'warning');
+    }
+  }
 }
 
 async function refreshFriends() {
-  const [friends, blocks] = await Promise.all([
-    api('/api/friends'),
-    api('/api/friends/blocks')
-  ]);
+  try {
+    const [friends, blocks] = await Promise.all([
+      api('/api/friends'),
+      api('/api/friends/blocks')
+    ]);
   const ul = document.getElementById('friendsList');
   ul.innerHTML = '';
   friends.forEach(f => {
@@ -627,6 +681,12 @@ async function refreshFriends() {
     li.appendChild(wrap);
     ul.appendChild(li);
   });
+  } catch (error) {
+    console.error('Error refreshing friends:', error);
+    if (error.message && !error.message.includes('401')) {
+      showToast('Arkadaş listesi yüklenirken hata oluştu.', 'warning');
+    }
+  }
 }
 
 // Update online status indicator for a specific user
@@ -689,7 +749,8 @@ function showConfirm(title, message, actionText, actionClass = 'btn-primary') {
 }
 
 async function refreshRequests() {
-  const { incoming, outgoing } = await api('/api/friends/requests');
+  try {
+    const { incoming, outgoing } = await api('/api/friends/requests');
   
   // Ensure users are cached for proper display
   if (userCache.size === 0) {
@@ -780,6 +841,12 @@ async function refreshRequests() {
     
     out.appendChild(li);
   });
+  } catch (error) {
+    console.error('Error refreshing requests:', error);
+    if (error.message && !error.message.includes('401')) {
+      showToast('Arkadaşlık istekleri yüklenirken hata oluştu.', 'warning');
+    }
+  }
 }
 
 const regModalEl = document.getElementById('registerModal');
@@ -815,9 +882,8 @@ document.getElementById('btnLogin').onclick = async () => {
   const password = document.getElementById('loginPassword').value;
   try {
     await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-  // Immediately hide login UI for snappy UX, then load data
-  showAppShellUI();
-  await refreshMe();
+    // Login başarılı - refreshMe() UI değişikliklerini yapacak
+    await refreshMe();
     showToast('Giriş başarılı. Hoş geldiniz!', 'success');
     form.reset();
     form.classList.remove('was-validated');
@@ -835,9 +901,8 @@ if (btnLandingLogin) btnLandingLogin.onclick = async () => {
   if (!email || !password) { showToast('E-posta ve şifre gerekli.', 'warning'); return; }
   try {
     await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-  // Immediately hide landing UI, then load data
-  showAppShellUI();
-  await refreshMe();
+    // Login başarılı - refreshMe() UI değişikliklerini yapacak
+    await refreshMe();
   } catch (e) {
     console.error(e);
     showToast('Giriş başarısız: ' + (e.message || 'Hatalı bilgiler'), 'error');
@@ -863,11 +928,30 @@ if (landingForgot) landingForgot.onclick = async (e) => {
 };
 
 async function performLogout() {
-  await api('/api/auth/logout', { method: 'POST' });
-  me = null; activeFriendId = null; chatMessages.innerHTML = '';
+  try {
+    await api('/api/auth/logout', { method: 'POST' });
+  } catch (error) {
+    console.warn('Logout API call failed:', error);
+    // Server-side logout başarısız olsa da client-side temizle
+  }
+  
+  // Client-side state temizle
+  me = null; 
+  activeFriendId = null; 
+  chatMessages.innerHTML = '';
   document.getElementById('meBox').textContent = 'Çıkış yapıldı. Tekrar kayıt/giriş yapabilirsiniz.';
   document.getElementById('welcomeUser').textContent = '';
   localStorage.removeItem('lastChatUserId');
+  
+  // SignalR bağlantısını kapat
+  if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    try {
+      await connection.stop();
+    } catch (error) {
+      console.warn('SignalR disconnection failed:', error);
+    }
+  }
+  
   showLandingShellUI();
   showToast('Çıkış yapıldı.', 'success');
 }

@@ -30,22 +30,28 @@
           console.error('Fragment load failed for', url, e);
         }
       }));
-      // Quick preflight auth check to toggle UI before app logic
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        const landing = document.getElementById('landingShell');
-        const app = document.getElementById('appShell');
-        if (res.ok) {
-          document.body.classList.add('authenticated');
-          if (landing) { landing.style.display = 'none'; }
-          if (app) { app.style.display = ''; }
-        } else {
-          document.body.classList.remove('authenticated');
-          if (landing) { landing.style.display = ''; }
-          if (app) { app.style.display = 'none'; }
-        }
-      } catch { /* ignore */ }
-      // Ensure app logic loads after DOM fragments are injected
+      // DOM fragments yüklendiğinde loading durumu göster ve auth kontrol et
+      const landing = document.getElementById('landingShell');
+      const app = document.getElementById('appShell');
+      
+      // Başlangıçta landing göster, loading state'i ekle  
+      if (landing) { 
+        landing.style.display = ''; 
+        // Geçici loading durumu ekle
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'authLoading';
+        loadingDiv.innerHTML = `
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <div class="mt-2 text-muted">Kimlik doğrulanıyor...</div>
+          </div>
+        `;
+        landing.appendChild(loadingDiv);
+      }
+      if (app) { app.style.display = 'none'; }
+      
+      // Auth durumu app.js'deki refreshMe() tarafından kontrol edilecek
+      // Loading durumu orada kaldırılacak
   const s = document.createElement('script');
   // Cache-bust to ensure the latest app.js is loaded after fragment updates
   s.src = '/app.js?v=' + Date.now();
