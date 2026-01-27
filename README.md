@@ -299,6 +299,7 @@ docker compose up -d --build
 docker compose logs -f
 docker compose down
 ```
+admin@jokerchat.com / Admin123!
 
 Upstash Redis ile çalıştırma (local Redis olmadan)
 

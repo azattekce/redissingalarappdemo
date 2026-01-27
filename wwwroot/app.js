@@ -509,6 +509,28 @@ async function refreshMe() {
     showAppShellUI();
     console.log('Authentication successful, loading app data...');
     
+    // If logged in user is an admin, open admin panel automatically
+    try {
+      if (typeof AdminPanel !== 'undefined') {
+        const isAdmin = await AdminPanel.checkAdminAuth();
+        console.log('[refreshMe] admin check:', isAdmin);
+        if (isAdmin) {
+          // show an admin quick button in header
+          const headerActions = document.querySelector('.d-flex.align-items-center.gap-2');
+          if (headerActions && !document.getElementById('btnOpenAdminPanel')) {
+            const btn = document.createElement('button');
+            btn.id = 'btnOpenAdminPanel';
+            btn.className = 'btn btn-sm btn-outline-secondary';
+            btn.textContent = 'Admin Panel';
+            btn.onclick = () => AdminPanel.showAdminPanel();
+            headerActions.insertBefore(btn, headerActions.firstChild);
+          }
+          // Automatically open admin panel for admins
+          AdminPanel.showAdminPanel();
+        }
+      }
+    } catch (e) { console.warn('Admin auto-open failed', e); }
+
     // Paralel olarak diğer verileri yükle  
     await Promise.all([refreshUsers(), refreshFriends(), refreshRequests()]);
     await startHub();
@@ -1173,3 +1195,420 @@ refreshMe();
 
 // Initialize theme system
 ThemeManager.init();
+
+// Admin Panel System
+const AdminPanel = {
+  currentAdmin: null,
+  
+  async checkAdminAuth() {
+    try {
+      console.log('[AdminPanel] calling /api/admin/me to verify admin status');
+      this.currentAdmin = await api('/api/admin/me');
+      console.log('[AdminPanel] /api/admin/me returned:', this.currentAdmin);
+      return true;
+    } catch (err) {
+      console.warn('[AdminPanel] admin auth check failed:', err);
+      this.currentAdmin = null;
+      return false;
+    }
+  },
+  
+  showAdminPanel() {
+    const adminPanel = document.getElementById('adminPanel');
+    const landingShell = document.getElementById('landingShell');
+    const appShell = document.getElementById('appShell');
+    
+    if (landingShell) landingShell.style.display = 'none';
+    if (appShell) appShell.style.display = 'none';
+    if (adminPanel) adminPanel.style.display = '';
+    
+    if (this.currentAdmin) {
+      const adminName = this.currentAdmin.displayName || this.currentAdmin.DisplayName || this.currentAdmin.email || this.currentAdmin.Email || 'Admin';
+      document.getElementById('adminWelcome').textContent = `Hoş geldin, ${adminName}`;
+    }
+    
+    this.loadUsers();
+  },
+  
+  hideAdminPanel() {
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.style.display = 'none';
+    
+    // Check if user was authenticated before admin mode
+    if (me) {
+      showAppShellUI();
+    } else {
+      showLandingShellUI();
+    }
+  },
+  
+  async loadUsers() {
+    const loading = document.getElementById('adminUsersLoading');
+    const table = document.getElementById('adminUsersTable');
+    
+    try {
+      loading.classList.remove('d-none');
+      const users = await api('/api/admin/users');
+      
+      table.innerHTML = '';
+      let totalUsers = 0;
+      let activeUsers = 0;
+      let lockedUsers = 0;
+      
+      users.forEach(user => {
+        const email = user.email || user.Email || '';
+        const displayName = user.displayName || user.DisplayName || '';
+        const id = user.id || user.Id || '';
+        const isLocked = (user.isLocked ?? user.IsLocked) || false;
+
+        totalUsers++;
+        if (isLocked) lockedUsers++; else activeUsers++;
+
+        const row = document.createElement('tr');
+        const statusBadge = isLocked ? '<span class="badge bg-warning">Engelli</span>' : '<span class="badge bg-success">Aktif</span>';
+
+        row.innerHTML = `
+          <td>${email}</td>
+          <td>${displayName || '-'}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary" onclick="AdminPanel.editUser('${id}')" title="Düzenle">
+                <i class="bi bi-pencil"></i>
+              </button>
+              ${!isLocked ? 
+                `<button class="btn btn-outline-warning" onclick="AdminPanel.lockUser('${id}', '${email}')" title="Engelle">
+                  <i class="bi bi-lock"></i>
+                </button>` :
+                `<button class="btn btn-outline-success" onclick="AdminPanel.unlockUser('${id}')" title="Engeli Kaldır">
+                  <i class="bi bi-unlock"></i>
+                </button>`
+              }
+              <button class="btn btn-outline-danger" onclick="AdminPanel.deleteUser('${id}', '${email}')" title="Sil">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        table.appendChild(row);
+      });
+      
+      // Update statistics
+      document.getElementById('totalUsersCount').textContent = totalUsers;
+      document.getElementById('activeUsersCount').textContent = activeUsers;
+      document.getElementById('lockedUsersCount').textContent = lockedUsers;
+      
+    } catch (error) {
+      console.error('Error loading users:', error);
+      showToast('Kullanıcılar yüklenirken hata oluştu.', 'error');
+    } finally {
+      loading.classList.add('d-none');
+    }
+  },
+  
+  showAddUserModal() {
+    document.getElementById('userModalTitle').textContent = 'Yeni Kullanıcı Ekle';
+    document.getElementById('userFormId').value = '';
+    document.getElementById('userFormEmail').value = '';
+    document.getElementById('userFormDisplayName').value = '';
+    document.getElementById('userFormPassword').value = '';
+    document.getElementById('userFormPassword').required = true;
+    document.getElementById('passwordOptionalText').style.display = 'none';
+    
+    const form = document.getElementById('userForm');
+    form.classList.remove('was-validated');
+    
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+  },
+  
+  async editUser(userId) {
+    try {
+      const user = await api(`/api/users/${userId}`);
+      
+      document.getElementById('userModalTitle').textContent = 'Kullanıcı Düzenle';
+      document.getElementById('userFormId').value = userId;
+      document.getElementById('userFormEmail').value = user.email;
+      document.getElementById('userFormDisplayName').value = user.displayName || '';
+      document.getElementById('userFormPassword').value = '';
+      document.getElementById('userFormPassword').required = false;
+      document.getElementById('passwordOptionalText').style.display = '';
+      
+      const form = document.getElementById('userForm');
+      form.classList.remove('was-validated');
+      
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).show();
+    } catch (error) {
+      showToast('Kullanıcı bilgileri alınırken hata oluştu.', 'error');
+    }
+  },
+  
+  async saveUser() {
+    const form = document.getElementById('userForm');
+    form.classList.add('was-validated');
+    
+    if (!form.checkValidity()) return;
+    
+    const userId = document.getElementById('userFormId').value;
+    const email = document.getElementById('userFormEmail').value.trim();
+    const displayName = document.getElementById('userFormDisplayName').value.trim();
+    const password = document.getElementById('userFormPassword').value;
+    
+    try {
+      if (userId) {
+        // Update user
+        await api(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            Email: email,
+            DisplayName: displayName,
+            Password: password || undefined
+          })
+        });
+        showToast('Kullanıcı başarıyla güncellendi.', 'success');
+      } else {
+        // Create user
+        await api('/api/admin/users', {
+          method: 'POST',
+          body: JSON.stringify({
+            Email: email,
+            DisplayName: displayName,
+            Password: password
+          })
+        });
+        showToast('Kullanıcı başarıyla oluşturuldu.', 'success');
+      }
+      
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('userModal')).hide();
+      this.loadUsers();
+      
+    } catch (error) {
+      console.error('Save user error:', error);
+      showToast('Kullanıcı kaydedilirken hata oluştu: ' + (error.message || 'Bilinmeyen hata'), 'error');
+    }
+  },
+  
+  lockUser(userId, email) {
+    document.getElementById('lockUserId').value = userId;
+    document.getElementById('lockUserMessage').textContent = `${email} kullanıcısını engellemek istediğinizden emin misiniz?`;
+    
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('lockUserModal')).show();
+  },
+  
+  async confirmLockUser() {
+    const userId = document.getElementById('lockUserId').value;
+    const lockoutDays = parseInt(document.getElementById('lockoutDays').value);
+    
+    try {
+      await api(`/api/admin/users/${userId}/lock`, {
+        method: 'POST',
+        body: JSON.stringify({ LockoutDays: lockoutDays })
+      });
+      
+      showToast('Kullanıcı başarıyla engellendi.', 'success');
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('lockUserModal')).hide();
+      this.loadUsers();
+      
+    } catch (error) {
+      console.error('Lock user error:', error);
+      showToast('Kullanıcı engellenirken hata oluştu.', 'error');
+    }
+  },
+  
+  async unlockUser(userId) {
+    const confirmed = await showConfirm(
+      'Engeli Kaldır',
+      'Bu kullanıcının engelini kaldırmak istediğinizden emin misiniz?',
+      'Engeli Kaldır',
+      'btn-success'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await api(`/api/admin/users/${userId}/unlock`, { method: 'POST' });
+      showToast('Kullanıcının engeli kaldırıldı.', 'success');
+      this.loadUsers();
+    } catch (error) {
+      console.error('Unlock user error:', error);
+      showToast('Engel kaldırılırken hata oluştu.', 'error');
+    }
+  },
+  
+  async deleteUser(userId, email) {
+    const confirmed = await showConfirm(
+      'Kullanıcıyı Sil',
+      `${email} kullanıcısını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve kullanıcının tüm mesajları silinecektir.`,
+      'Sil',
+      'btn-danger'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await api(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      showToast('Kullanıcı başarıyla silindi.', 'success');
+      this.loadUsers();
+    } catch (error) {
+      console.error('Delete user error:', error);
+      showToast('Kullanıcı silinirken hata oluştu.', 'error');
+    }
+  },
+  
+  async logout() {
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.warn('Admin logout API failed:', error);
+    }
+    
+    this.currentAdmin = null;
+    this.hideAdminPanel();
+    showToast('Admin çıkışı yapıldı.', 'success');
+  }
+};
+
+// Admin Panel Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Admin login link
+  const adminLoginLink = document.getElementById('adminLoginLink');
+  if (adminLoginLink) {
+    adminLoginLink.onclick = (e) => {
+      e.preventDefault();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).show();
+    };
+  }
+  
+  // Admin login button
+  const btnAdminLogin = document.getElementById('btnAdminLogin');
+    if (btnAdminLogin) {
+    btnAdminLogin.onclick = async () => {
+      const form = document.getElementById('adminLoginForm');
+      form.classList.add('was-validated');
+      
+      if (!form.checkValidity()) return;
+      
+      const email = document.getElementById('adminLoginEmail').value.trim();
+      const password = document.getElementById('adminLoginPassword').value;
+      
+      try {
+        console.log('[Admin] calling /api/admin/login for', email);
+        const res = await api('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        console.log('[Admin] /api/admin/login call completed', res);
+        
+        const ok = await AdminPanel.checkAdminAuth();
+        console.log('[Admin] checkAdminAuth returned', ok);
+        if (ok) {
+          AdminPanel.showAdminPanel();
+        } else {
+          showToast('Admin yetkisi doğrulanamadı.', 'error');
+        }
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).hide();
+        showToast('Admin girişi başarılı.', 'success');
+        
+        form.reset();
+        form.classList.remove('was-validated');
+        
+      } catch (error) {
+        console.error('Admin login error:', error);
+        showToast('Admin girişi başarısız: Yetkisiz erişim', 'error');
+      }
+    };
+  }
+  
+  // Admin panel buttons
+  const btnBackToChat = document.getElementById('btnBackToChat');
+  if (btnBackToChat) {
+    btnBackToChat.onclick = () => AdminPanel.hideAdminPanel();
+  }
+  
+  const btnAdminLogout = document.getElementById('btnAdminLogout');
+  if (btnAdminLogout) {
+    btnAdminLogout.onclick = () => AdminPanel.logout();
+  }
+  
+  const btnAddUser = document.getElementById('btnAddUser');
+  if (btnAddUser) {
+    btnAddUser.onclick = () => AdminPanel.showAddUserModal();
+  }
+  
+  const btnSaveUser = document.getElementById('btnSaveUser');
+  if (btnSaveUser) {
+    btnSaveUser.onclick = () => AdminPanel.saveUser();
+  }
+  
+  const btnLockUser = document.getElementById('btnLockUser');
+  if (btnLockUser) {
+    btnLockUser.onclick = () => AdminPanel.confirmLockUser();
+  }
+});
+
+// Make AdminPanel globally accessible
+window.AdminPanel = AdminPanel;
+
+// --- Ensure admin handlers are attached immediately ---
+// Sometimes this script is loaded after DOMContentLoaded; attach handlers now if elements exist
+{
+  const adminLoginLinkImmediate = document.getElementById('adminLoginLink');
+  if (adminLoginLinkImmediate) {
+    adminLoginLinkImmediate.onclick = (e) => {
+      e.preventDefault();
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).show();
+    };
+  }
+
+  const btnAdminLoginImmediate = document.getElementById('btnAdminLogin');
+  if (btnAdminLoginImmediate) {
+    btnAdminLoginImmediate.onclick = async () => {
+      const form = document.getElementById('adminLoginForm');
+      form.classList.add('was-validated');
+      if (!form.checkValidity()) return;
+      const email = document.getElementById('adminLoginEmail').value.trim();
+      const password = document.getElementById('adminLoginPassword').value;
+      try {
+        console.log('[Admin Immediate] calling /api/admin/login for', email);
+        const res = await api('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+        console.log('[Admin Immediate] /api/admin/login returned', res);
+
+        const ok = await AdminPanel.checkAdminAuth();
+        console.log('[Admin Immediate] checkAdminAuth returned', ok);
+        if (ok) {
+          AdminPanel.showAdminPanel();
+        } else {
+          showToast('Admin yetkisi doğrulanamadı.', 'error');
+        }
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).hide();
+        showToast('Admin girişi başarılı.', 'success');
+
+        form.reset();
+        form.classList.remove('was-validated');
+      } catch (error) {
+        console.error('Admin login error:', error);
+        showToast('Admin girişi başarısız: Yetkisiz erişim', 'error');
+      }
+    };
+  }
+
+    // Other admin controls (attach immediately if present)
+    const btnBackToChatImmediate = document.getElementById('btnBackToChat');
+    if (btnBackToChatImmediate) btnBackToChatImmediate.onclick = () => AdminPanel.hideAdminPanel();
+
+    const btnAdminLogoutImmediate = document.getElementById('btnAdminLogout');
+    if (btnAdminLogoutImmediate) btnAdminLogoutImmediate.onclick = () => AdminPanel.logout();
+
+    const btnAddUserImmediate = document.getElementById('btnAddUser');
+    if (btnAddUserImmediate) btnAddUserImmediate.onclick = () => AdminPanel.showAddUserModal();
+
+    const btnSaveUserImmediate = document.getElementById('btnSaveUser');
+    if (btnSaveUserImmediate) btnSaveUserImmediate.onclick = () => AdminPanel.saveUser();
+
+    const btnLockUserImmediate = document.getElementById('btnLockUser');
+    if (btnLockUserImmediate) btnLockUserImmediate.onclick = () => AdminPanel.confirmLockUser();
+}

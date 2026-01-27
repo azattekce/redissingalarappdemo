@@ -5,6 +5,14 @@
       "PackagePath": "staticwebassets\\app.js"
     },
     {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\admin-modals.html",
+      "PackagePath": "staticwebassets\\fragments\\admin-modals.html"
+    },
+    {
+      "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\admin-panel.html",
+      "PackagePath": "staticwebassets\\fragments\\admin-panel.html"
+    },
+    {
       "Id": "C:\\zattekce\\Projects\\workplace\\.NET\\Redis\\RedisChatApp\\wwwroot\\fragments\\app-shell.html",
       "PackagePath": "staticwebassets\\fragments\\app-shell.html"
     },

@@ -119,3 +119,91 @@ body.authenticated #landingShell { display: none !important; }
 .list-group-item .badge {
   font-size: 0.7rem;
 }
+
+/* Admin Panel Styles */
+#adminPanel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+#adminPanel .container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#adminPanel .card {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+#adminPanel .card-header {
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  color: white;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+#adminPanel .table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  border-top: none;
+}
+
+#adminPanel .btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+#adminPanel .badge {
+  font-size: 0.75rem;
+}
+
+#adminUsersTable tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Admin Login Modal */
+#adminLoginModal .modal-content {
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+#adminLoginModal .modal-header {
+  background: linear-gradient(90deg, #dc3545, #b02a37);
+  color: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Statistics Cards */
+#adminPanel .card.text-center .card-body {
+  padding: 1.5rem;
+}
+
+#adminPanel .card.text-center h5 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+#adminPanel .card.text-center i {
+  margin-right: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #adminPanel .btn-group-sm {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  #adminPanel .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  #adminPanel .card.text-center h5 {
+    font-size: 1.5rem;
+  }
+}

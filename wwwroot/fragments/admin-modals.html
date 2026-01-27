@@ -1,0 +1,105 @@
+  <!-- Admin Login Modal -->
+  <div class="modal fade" id="adminLoginModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Admin Girişi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="adminLoginForm" novalidate>
+            <div class="mb-3">
+              <label for="adminLoginEmail" class="form-label">Admin Email</label>
+              <input type="email" class="form-control" id="adminLoginEmail" required>
+              <div class="invalid-feedback">Geçerli bir email adresi girin.</div>
+            </div>
+            <div class="mb-3">
+              <label for="adminLoginPassword" class="form-label">Şifre</label>
+              <input type="password" class="form-control" id="adminLoginPassword" required>
+              <div class="invalid-feedback">Şifre gerekli.</div>
+            </div>
+            <div class="alert alert-info">
+              <small>
+                <i class="bi bi-info-circle"></i>
+                Varsayılan admin: admin@jokerchat.com / Admin123!
+              </small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btnAdminLogin">Giriş Yap</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userModalTitle">Kullanıcı Ekle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="userForm" novalidate>
+            <input type="hidden" id="userFormId">
+            <div class="mb-3">
+              <label for="userFormEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="userFormEmail" required>
+              <div class="invalid-feedback">Geçerli bir email adresi girin.</div>
+            </div>
+            <div class="mb-3">
+              <label for="userFormDisplayName" class="form-label">Görünen Ad</label>
+              <input type="text" class="form-control" id="userFormDisplayName" required>
+              <div class="invalid-feedback">Görünen ad gerekli.</div>
+            </div>
+            <div class="mb-3">
+              <label for="userFormPassword" class="form-label">
+                Şifre 
+                <span id="passwordOptionalText" class="text-muted" style="display:none;">(Boş bırakırsanız değişmez)</span>
+              </label>
+              <input type="password" class="form-control" id="userFormPassword" minlength="6">
+              <div class="invalid-feedback">Şifre en az 6 karakter olmalı.</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btnSaveUser">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lock User Modal -->
+  <div class="modal fade" id="lockUserModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Kullanıcıyı Engelle</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="lockUserForm" novalidate>
+            <input type="hidden" id="lockUserId">
+            <p id="lockUserMessage"></p>
+            <div class="mb-3">
+              <label for="lockoutDays" class="form-label">Engelleme Süresi</label>
+              <select class="form-select" id="lockoutDays" required>
+                <option value="1">1 Gün</option>
+                <option value="7">1 Hafta</option>
+                <option value="30">1 Ay</option>
+                <option value="0">Kalıcı</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-warning" id="btnLockUser">Engelle</button>
+        </div>
+      </div>
+    </div>
+  </div>

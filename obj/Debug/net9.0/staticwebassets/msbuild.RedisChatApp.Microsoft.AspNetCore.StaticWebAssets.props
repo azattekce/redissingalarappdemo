@@ -12,11 +12,47 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>amgol73gyw</Fingerprint>
-      <Integrity>3rSGnAX6qt+U5YrZ02bu4xjho9qLs/UcfWNjYgUflhE=</Integrity>
+      <Fingerprint>9rqci7bluq</Fingerprint>
+      <Integrity>iy/YOqzgMQnp7zmSNN92Xu+nDxP70m3U+CDwpWIjcQ4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\app.js'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\admin-modals.html'))">
+      <SourceType>Package</SourceType>
+      <SourceId>RedisChatApp</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/RedisChatApp</BasePath>
+      <RelativePath>fragments/admin-modals.html</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>4benhbt8pj</Fingerprint>
+      <Integrity>MDXVO0kHwh9w0sqSvwL8v5ZSXI1GtJt+z0r+O7VO9hs=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\admin-modals.html'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\admin-panel.html'))">
+      <SourceType>Package</SourceType>
+      <SourceId>RedisChatApp</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/RedisChatApp</BasePath>
+      <RelativePath>fragments/admin-panel.html</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>s89cnc4wru</Fingerprint>
+      <Integrity>zCB9fis8uvReN7oCv4LX0C6wUD0dtnsGN1zLcLbdeQU=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\admin-panel.html'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\app-shell.html'))">
       <SourceType>Package</SourceType>
@@ -66,8 +102,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>g3g4b359oa</Fingerprint>
-      <Integrity>fJHYups2vF0cGJaBauRcpOuYPpsBPVIISt37qfph3/Q=</Integrity>
+      <Fingerprint>p7cim9l4h8</Fingerprint>
+      <Integrity>Vfhm+mHitTkP3+nsHsRL9le1FF3HAfr0aYCiolqb5gw=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\fragments\landing.html'))</OriginalItemSpec>
@@ -102,8 +138,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>gohtj19pn5</Fingerprint>
-      <Integrity>QJrSE94ElG2xr/e+z2tr1hOtO4GrlYgic//SoMPOGl4=</Integrity>
+      <Fingerprint>epqxr205x2</Fingerprint>
+      <Integrity>jncOHdsJgbXM35vQ+WNJkv8SqZuiqIUUdDyQVH+agNA=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\index.html'))</OriginalItemSpec>
@@ -120,8 +156,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>r36ydkae87</Fingerprint>
-      <Integrity>mY9TYhue0KCiq1e8+I0FxLFqSK6XixqFh7/MGZ2d3JM=</Integrity>
+      <Fingerprint>gv5cknhp3j</Fingerprint>
+      <Integrity>RLduRe+G/8yadYYR4Ony7X3LgfN/74wTyGWfykcpHGc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\site.css'))</OriginalItemSpec>

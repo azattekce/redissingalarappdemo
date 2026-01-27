@@ -93,6 +93,42 @@ builder.Services.AddSingleton<EmailService>();
 
 var app = builder.Build();
 
+// Seed admin user and roles
+async Task SeedAdminUser()
+{
+	using var scope = app.Services.CreateScope();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+	
+	// Create Admin role if it doesn't exist
+	if (!await roleManager.RoleExistsAsync("Admin"))
+	{
+		await roleManager.CreateAsync(new IdentityRole("Admin"));
+	}
+	
+	// Create default admin user if it doesn't exist
+	var adminEmail = "admin@jokerchat.com";
+	var adminUser = await userManager.FindByEmailAsync(adminEmail);
+	if (adminUser == null)
+	{
+		adminUser = new ApplicationUser
+		{
+			UserName = adminEmail,
+			Email = adminEmail,
+			DisplayName = "Sistem Yöneticisi"
+		};
+		var result = await userManager.CreateAsync(adminUser, "Admin123!");
+		if (result.Succeeded)
+		{
+			await userManager.AddToRoleAsync(adminUser, "Admin");
+		}
+	}
+	else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+	{
+		await userManager.AddToRoleAsync(adminUser, "Admin");
+	}
+}
+
 if (app.Environment.IsDevelopment())
 {
 	app.UseDeveloperExceptionPage();
@@ -410,11 +446,166 @@ app.MapPost("/api/messages/{id}/delete", async (AppDbContext db, UserManager<App
 	return Results.Ok();
 }).RequireAuthorization();
 
+// Admin Panel API Endpoints
+app.MapPost("/api/admin/login", async (SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, LoginRequest req) =>
+{
+	var user = await userManager.FindByEmailAsync(req.email);
+	if (user == null) return Results.Unauthorized();
+	
+	var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+	if (!isAdmin) return Results.Unauthorized();
+	
+	var result = await signInManager.PasswordSignInAsync(req.email, req.password, isPersistent: true, lockoutOnFailure: false);
+	return result.Succeeded ? Results.Ok() : Results.Unauthorized();
+});
+
+app.MapGet("/api/admin/me", async (UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor) =>
+{
+	var userId = userManager.GetUserId(accessor.HttpContext.User);
+	if (userId == null) return Results.Unauthorized();
+	
+	var user = await userManager.FindByIdAsync(userId);
+	if (user == null) return Results.Unauthorized();
+	
+	var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+	if (!isAdmin) return Results.Unauthorized();
+	
+	return Results.Ok(new { user.Id, user.Email, user.DisplayName, IsAdmin = true });
+}).RequireAuthorization();
+
+app.MapGet("/api/admin/users", async (UserManager<ApplicationUser> userManager, AppDbContext db) =>
+{
+	var users = await userManager.Users
+		.Select(u => new {
+			u.Id,
+			u.Email,
+			u.DisplayName,
+			u.LockoutEnd,
+			IsLocked = u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow
+		})
+		.OrderBy(u => u.Email)
+		.ToListAsync();
+	return Results.Ok(users);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+app.MapPost("/api/admin/users", async (UserManager<ApplicationUser> userManager, CreateUserRequest req) =>
+{
+	var user = new ApplicationUser
+	{
+		UserName = req.Email,
+		Email = req.Email,
+		DisplayName = req.DisplayName
+	};
+	var result = await userManager.CreateAsync(user, req.Password);
+	if (result.Succeeded)
+	{
+		return Results.Ok(new { user.Id, user.Email, user.DisplayName });
+	}
+	return Results.BadRequest(result.Errors);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+app.MapPut("/api/admin/users/{id}", async (UserManager<ApplicationUser> userManager, string id, UpdateUserRequest req) =>
+{
+	var user = await userManager.FindByIdAsync(id);
+	if (user == null) return Results.NotFound();
+	
+	user.DisplayName = req.DisplayName;
+	user.Email = req.Email;
+	user.UserName = req.Email;
+	
+	var result = await userManager.UpdateAsync(user);
+	if (result.Succeeded)
+	{
+		// Update password if provided
+		if (!string.IsNullOrEmpty(req.Password))
+		{
+			var token = await userManager.GeneratePasswordResetTokenAsync(user);
+			await userManager.ResetPasswordAsync(user, token, req.Password);
+		}
+		return Results.Ok();
+	}
+	return Results.BadRequest(result.Errors);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+app.MapDelete("/api/admin/users/{id}", async (UserManager<ApplicationUser> userManager, AppDbContext db, string id) =>
+{
+	var user = await userManager.FindByIdAsync(id);
+	if (user == null) return Results.NotFound();
+	
+	// Remove user's messages and relationships
+	var userMessages = await db.ChatMessages.Where(m => m.FromUserId == id || m.ToUserId == id).ToListAsync();
+	db.ChatMessages.RemoveRange(userMessages);
+	
+	var friendRequests = await db.FriendRequests.Where(f => f.FromUserId == id || f.ToUserId == id).ToListAsync();
+	db.FriendRequests.RemoveRange(friendRequests);
+	
+	var friendBlocks = await db.FriendBlocks.Where(f => f.BlockerUserId == id || f.BlockedUserId == id).ToListAsync();
+	db.FriendBlocks.RemoveRange(friendBlocks);
+	
+	await db.SaveChangesAsync();
+	
+	var result = await userManager.DeleteAsync(user);
+	return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+app.MapPost("/api/admin/users/{id}/lock", async (UserManager<ApplicationUser> userManager, string id, LockUserRequest req) =>
+{
+	var user = await userManager.FindByIdAsync(id);
+	if (user == null) return Results.NotFound();
+	
+	var lockoutEnd = req.LockoutDays > 0 ? DateTimeOffset.UtcNow.AddDays(req.LockoutDays) : DateTimeOffset.UtcNow.AddYears(100);
+	var result = await userManager.SetLockoutEndDateAsync(user, lockoutEnd);
+	
+	return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
+app.MapPost("/api/admin/users/{id}/unlock", async (UserManager<ApplicationUser> userManager, string id) =>
+{
+	var user = await userManager.FindByIdAsync(id);
+	if (user == null) return Results.NotFound();
+	
+	var result = await userManager.SetLockoutEndDateAsync(user, null);
+	return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
+
 // DB init (EnsureCreated for demo simplicity)
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 	await db.Database.EnsureCreatedAsync();
+	
+	// Seed admin user and roles
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+	
+	// Create Admin role if it doesn't exist
+	if (!await roleManager.RoleExistsAsync("Admin"))
+	{
+		await roleManager.CreateAsync(new IdentityRole("Admin"));
+	}
+	
+	// Create default admin user if it doesn't exist
+	var adminEmail = "admin@jokerchat.com";
+	var adminUser = await userManager.FindByEmailAsync(adminEmail);
+	if (adminUser == null)
+	{
+		adminUser = new ApplicationUser
+		{
+			UserName = adminEmail,
+			Email = adminEmail,
+			DisplayName = "Sistem Yöneticisi"
+		};
+		var result = await userManager.CreateAsync(adminUser, "Admin123!");
+		if (result.Succeeded)
+		{
+			await userManager.AddToRoleAsync(adminUser, "Admin");
+		}
+	}
+	else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+	{
+		await userManager.AddToRoleAsync(adminUser, "Admin");
+	}
+	
 	// Ensure new tables exist for existing dev DBs (SQLite only)
 	if (db.Database.IsSqlite())
 	{
