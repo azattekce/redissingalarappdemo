@@ -38,9 +38,9 @@
 #landingShell .display-3 { font-size: 3.2rem; }
 @media (max-width: 576px) {
   #landingShell .display-3 { font-size: 2.4rem; }
-}
 
-/* When authenticated, force-hide landing regardless of inline state */
+/* Admin panel styles - make admin match app background and responsive */
+/* Admin Panel Styles */
 body.authenticated #landingShell { display: none !important; }
 
 /* Theme System - Custom Properties */
@@ -119,19 +119,24 @@ body.authenticated #landingShell { display: none !important; }
 .list-group-item .badge {
   font-size: 0.7rem;
 }
-
+/* Admin panel styles - make admin match app background and responsive */
 /* Admin Panel Styles */
 #adminPanel {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
+  /* inherit app's background (respects theme variables) */
+  background: inherit;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
-#adminPanel .container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  margin-top: 20px;
-  margin-bottom: 20px;
+/* Support both .container and .container-fluid usage in the fragment */
+#adminPanel .container,
+#adminPanel .container-fluid {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 1rem 1rem;
 }
 
 #adminPanel .card {

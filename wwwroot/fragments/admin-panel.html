@@ -1,6 +1,6 @@
   <!-- Admin Panel -->
   <div id="adminPanel" style="display:none;">
-    <div class="container py-4">
+    <div class="container-fluid py-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="m-0"><i class="bi bi-shield-lock text-danger"></i> Admin Panel</h1>
         <div class="d-flex align-items-center gap-2">
@@ -10,9 +10,8 @@
         </div>
       </div>
 
-      <!-- User Management Section -->
-      <div class="row">
-        <div class="col-12">
+      <div class="row g-3">
+        <div class="col-12 col-lg-8">
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5 class="mb-0"><i class="bi bi-people"></i> Kullanıcı Yönetimi</h5>
@@ -21,9 +20,8 @@
               </button>
             </div>
             <div class="card-body">
-              <!-- Users Table -->
               <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                   <thead>
                     <tr>
                       <th>Email</th>
@@ -37,7 +35,7 @@
                   </tbody>
                 </table>
               </div>
-              
+
               <div id="adminUsersLoading" class="text-center py-3 d-none">
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Yükleniyor...</span>
@@ -46,40 +44,41 @@
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Statistics Section -->
-      <div class="row mt-4">
-        <div class="col-md-4">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title text-primary">
-                <i class="bi bi-people"></i>
-                <span id="totalUsersCount">0</span>
-              </h5>
-              <p class="card-text">Toplam Kullanıcı</p>
+
+        <div class="col-12 col-lg-4">
+          <div class="row">
+            <div class="col-12 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title text-primary mb-0">
+                    <i class="bi bi-people"></i>
+                    <span id="totalUsersCount">0</span>
+                  </h5>
+                  <p class="card-text small text-muted">Toplam Kullanıcı</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title text-success">
-                <i class="bi bi-person-check"></i>
-                <span id="activeUsersCount">0</span>
-              </h5>
-              <p class="card-text">Aktif Kullanıcı</p>
+            <div class="col-12 mb-3">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title text-success mb-0">
+                    <i class="bi bi-person-check"></i>
+                    <span id="activeUsersCount">0</span>
+                  </h5>
+                  <p class="card-text small text-muted">Aktif Kullanıcı</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card text-center">
-            <div class="card-body">
-              <h5 class="card-title text-warning">
-                <i class="bi bi-person-lock"></i>
-                <span id="lockedUsersCount">0</span>
-              </h5>
-              <p class="card-text">Engelli Kullanıcı</p>
+            <div class="col-12">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="card-title text-warning mb-0">
+                    <i class="bi bi-person-lock"></i>
+                    <span id="lockedUsersCount">0</span>
+                  </h5>
+                  <p class="card-text small text-muted">Engelli Kullanıcı</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
